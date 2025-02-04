@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StyleSheet,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker';
@@ -25,6 +26,8 @@ const SignupScreen = ({navigation, route}: Props) => {
   const {error, isAuthenticated} = useSelector((state: any) => state.user);
 
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [avatar, setAvatar] = useState('');
 
   const {email = useState(''), password = useState('')} = route.params;
@@ -43,12 +46,10 @@ const SignupScreen = ({navigation, route}: Props) => {
         if (image) {
           setAvatar('data:image/jpeg;base64,' + image.data);
         } else {
-          // Handle the case where image is null or undefined
           Alert.alert('No image selected');
         }
       })
       .catch(error => {
-        // Handle any errors that occur during image picking
         console.error('Image picking error:', error);
       });
   };
@@ -58,10 +59,7 @@ const SignupScreen = ({navigation, route}: Props) => {
       Alert.alert('Registration Successful!');
       await registerUser(name, email, password, avatar, accountType)(dispatch);
     } catch (error) {
-      // Handle the error here
       console.error('An error occurred:', error);
-
-      // You can also show an error message to the user if needed
       Alert.alert('Error', 'An error occurred while processing your request.');
       navigation.navigate('Signup');
     }
@@ -78,144 +76,239 @@ const SignupScreen = ({navigation, route}: Props) => {
   }, [error, isAuthenticated]);
 
   return (
-    <View className="bg-teal-50 w-full h-full flex-col justify-start items-center">
-      <ImageBackground
-        className="w-full h-full top-0 absolute top"
-        source={backgroundImage}
-      />
-      <View className="self-stretch flex-col justify-center items-center">
-        <View className="shadow-inner justify-center items-center">
-          <Text className="w-[239px] text-center text-white text-[52px] font-bold font-['Roboto'] tracking-tight">
-            LocalVibe
-          </Text>
-
-          <View className="w-56 h-56 relative">
-            <Image className="w-[60.57px] h-[61px] relative" source={logo} />
-          </View>
-        </View>
-
-        <View className="flex-col justify-center items-start gap-[5px] ">
-          <View className="SettingIcon w-full h-[180] justify-start items-start flex-col ">
-            <View className="GettingStarted flex-col justify-start items-start flex">
-              <Text className="SettingUpProfile w-[165] text-black text-xl font-bold font-['Roboto'] tracking-tight">
-                Setting up profile
-              </Text>
-              <Text className="JoinToExplore w-[148] text-black text-xs font-extralight font-['Roboto'] tracking-tight">
-                Join to explore!
-              </Text>
+    <View style={styles.container}>
+      <Image style={styles.backgroundImage} source={backgroundImage} />
+      <View style={styles.logoContainer}>
+        <Image style={styles.logo} source={logo} />
+      </View>
+      <View style={styles.contentContainer}>
+        <View style={styles.formContainer}>
+          <View style={styles.profileContainer}>
+            <View style={styles.profileDetails}>
+              <Text style={styles.heading}>Setting up profile</Text>
+              <Text style={styles.subheading}>Join to explore!</Text>
             </View>
 
-            <TouchableOpacity
-              className="Profileicon h-130 justify-start items-center flex-col rounded-[10px] shadow border border-neutral-400 border-opacity-20 bg-white p-5 my-5"
-              onPress={uploadImage}>
+            <TouchableOpacity style={styles.uploadButton} onPress={uploadImage}>
               <Image
-                className="w-[70] h-[70] rounded-[90px]"
+                style={styles.avatar}
                 source={{
                   uri: avatar
                     ? avatar
                     : 'https://cdn-icons-png.flaticon.com/512/8801/8801434.png',
                 }}
               />
-
-              <Text
-                className="ProfileIcon text-black text-[15px] font-bold font-['Roboto'] tracking-tight"
-                onPress={uploadImage}>
+              <Text style={styles.uploadText} onPress={uploadImage}>
                 Upload Profile Icon
               </Text>
             </TouchableOpacity>
           </View>
-          <View className="flex-col justify-center items-start gap-y-8">
-            <View className="flex-row justify-between items-center gap-x-6">
-              <View className="flex-col justify-center items-start gap-y-1.5">
-                <Text className="text-black text-[13px] font-bold font-roboto tracking-tight">
-                  Username
-                </Text>
-                <TextInput
-                  placeholder="Username"
-                  value={name}
-                  onChangeText={text => setName(text)}
-                  className="w-[356px] h-[39px] bg-white rounded-[10px] shadow border border-neutral-400 border-opacity-20"
-                />
-              </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>First Name</Text>
+              <TextInput
+                placeholder="First Name"
+                value={firstName}
+                onChangeText={text => setFirstName(text)}
+                style={styles.input}
+              />
             </View>
-            <View>
-              <Text className="text-black text-[13px] font-bold font-roboto tracking-tight">
-                Account Type
-              </Text>
-              <View className="w-[356px] h-[39px] bg-white rounded-[10px] shadow border border-neutral-400 border-opacity-20">
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Last Name</Text>
+              <TextInput
+                placeholder="Last Name"
+                value={lastName}
+                onChangeText={text => setLastName(text)}
+                style={styles.input}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Username</Text>
+              <TextInput
+                placeholder="Username"
+                value={name}
+                onChangeText={text => setName(text)}
+                style={styles.input}
+              />
+            </View>
+
+            <View style={styles.pickerContainer}>
+              <Text style={styles.inputLabel}>Account Type</Text>
+              <View style={styles.pickerWrapper}>
                 <Picker
                   prompt="Select an account type"
                   selectedValue={accountType}
                   onValueChange={itemValue => setAccountType(itemValue)}
-                  style={{flex: 1, fontSize: 16}}>
+                  style={styles.picker}>
                   <Picker.Item label="Personal" value="personal" />
                   <Picker.Item label="Business" value="business" />
                 </Picker>
               </View>
             </View>
           </View>
-          <View>
-            <View className="TermsAgreementBox w-[353px] justify-end gap-y-2.5">
-              <Text className="TermsAgreement w-full">
-                <Text
-                  style={{
-                    color: 'black',
-                    fontSize: 11,
-                    fontWeight: 'normal',
-                    fontFamily: 'Roboto',
-                    letterSpacing: -0.5,
-                  }}>
-                  Agree to
-                </Text>
-                <Text
-                  style={{
-                    color: 'green',
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    fontFamily: 'Roboto',
-                    letterSpacing: -0.5,
-                  }}
-                  onPress={() => navigation.navigate('')}>
-                  {' '}
-                  Terms
-                </Text>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontSize: 11,
-                    fontWeight: 'normal',
-                    fontFamily: 'Roboto',
-                    letterSpacing: -0.5,
-                  }}>
-                  {' '}
-                  and
-                </Text>
-                <Text
-                  style={{
-                    color: 'green',
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    fontFamily: 'Roboto',
-                    letterSpacing: -0.5,
-                  }}
-                  onPress={() => navigation.navigate('')}>
-                  {' '}
-                  Conditions
-                </Text>
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={submitHandler}
-            className="Frame19 w-[341px] h-[39px] px-[142px] bg-emerald-700 rounded-[10px] shadow justify-center items-center">
-            <Text className="Finish w-full text-center text-white font-bold font-Roboto tracking-tight">
-              Finish
-            </Text>
+
+          <TouchableOpacity onPress={submitHandler} style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>Finish</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F1FFF8',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: 1050,
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+  },
+  logo: {
+    marginTop: '18%',
+    width: 175,
+    height: 175,
+  },
+  formContainer: {
+    width: '90%',
+    alignItems: 'flex-start',
+    marginTop: 30,
+  },
+  profileContainer: {
+    width: '100%',
+    justifyContent: 'space-around',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  heading: {
+    fontSize: 24,
+    color: '#000',
+    fontWeight: 'bold',
+    fontFamily: 'Roboto',
+  },
+  subheading: {
+    fontSize: 12,
+    color: '#000',
+    fontFamily: 'Roboto',
+  },
+  uploadButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    borderColor: '#B0B0B0',
+    borderWidth: 1,
+    padding: 10,
+  },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  uploadText: {
+    fontSize: 15,
+    color: '#000',
+    fontWeight: 'bold',
+    fontFamily: 'Roboto',
+    marginTop: 5,
+  },
+
+  addressContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    marginVertical: 10,
+  },
+  inputContainer: {
+    justifyContent: 'space-between',
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    marginVertical: 2,
+  },
+  inputWrapper: {
+    marginBottom: 10,
+    width: '48%',
+  },
+  addressWrapper: {
+    marginBottom: 10,
+    width: '100%',
+  },
+  inputLabel: {
+    marginBottom: 10,
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    height: 40,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    elevation: 3,
+  },
+  pickerContainer: {
+    width: '48%',
+  },
+  pickerWrapper: {
+    justifyContent: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    height: 40,
+    borderRadius: 10,
+    elevation: 3,
+  },
+  picker: {
+    width: '100%',
+  },
+  termsText: {
+    fontSize: 11,
+    fontFamily: 'Roboto',
+  },
+  linkText: {
+    color: 'green',
+    fontWeight: 'bold',
+  },
+  submitButton: {
+    width: '100%',
+    backgroundColor: '#017E5E',
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    marginTop: 15,
+  },
+  submitButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  termContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+});
 
 export default SignupScreen;

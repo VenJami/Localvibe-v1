@@ -263,6 +263,8 @@ export const unfollowUserAction =
   async (dispatch: Dispatch<any>) => {
     try {
       const token = await AsyncStorage.getItem('token');
+
+      // Remove follower locally
       const updatedUsers = users.map((userObj: any) =>
         userObj._id === followUserId
           ? {
@@ -274,15 +276,16 @@ export const unfollowUserAction =
           : userObj,
       );
 
-      // update our users state
+      // Dispatch the updated users list to the store (locally updated)
       dispatch({
         type: 'getUsersSuccess',
         payload: updatedUsers,
       });
 
+      // Now make the API call to update the backend
       await axios.put(
-        `${URI}/add-user`,
-        {followUserId},
+        `${URI}/remove-follower`, // Ensure this endpoint removes the follower correctly
+        {userId, followUserId},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -290,6 +293,7 @@ export const unfollowUserAction =
         },
       );
     } catch (error) {
-      console.log('Error following user:', error);
+      console.log('Error unfollowing user:', error);
     }
   };
+

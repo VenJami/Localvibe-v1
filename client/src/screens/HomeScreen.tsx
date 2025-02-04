@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import {BlurView} from 'react-native-blur';
 import {
   View,
   TouchableOpacity,
@@ -24,14 +25,36 @@ import Lottie from 'lottie-react-native';
 import axios from 'axios';
 import {URI} from '../../redux/URI';
 import Slider from '@react-native-community/slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const loader = require('../assets/newsfeed/animation_lkbqh8co.json');
 
 type Props = {
+  route: any;
   navigation: any;
 };
 
-const HomeScreen = ({navigation}: Props) => {
+const HomeScreen = ({navigation, route}: Props) => {
+  const pins = useSelector((state: any) => state.pin);
+  // Function to store pins in AsyncStorage
+  const storePins = async (pins: any) => {
+    try {
+      if (pins) {
+        await AsyncStorage.setItem('pins', JSON.stringify(pins));
+        console.log('Pins stored successfully:', pins);
+      } else {
+        console.log('No pins available to store');
+      }
+    } catch (error) {
+      console.error('Error storing pins:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Call this only once when the component mounts
+    storePins(pins);
+  }, []); // Empty dependency array ensures this runs only once
+
   const {user, token, users} = useSelector((state: any) => state.user);
   const {posts, isLoading} = useSelector((state: any) => state.post);
   const dispatch = useDispatch();
@@ -52,6 +75,30 @@ const HomeScreen = ({navigation}: Props) => {
     latitude: user?.latitude,
     longitude: user?.longitude,
   });
+
+  useEffect(() => {
+    // Store the user's location in AsyncStorage when the component mounts
+    storeUserLocation();
+  }, [userData]); // Store whenever userData changes
+
+  
+
+  // Function to store userData in AsyncStorage
+  const storeUserLocation = async () => {
+    try {
+      // Ensure userData has both latitude and longitude
+      if (userData?.latitude && userData?.longitude) {
+        // Store the userData object (latitude and longitude) in AsyncStorage
+        await AsyncStorage.setItem('userLocation', JSON.stringify(userData));
+
+        console.log('User Location Stored:', userData);
+      } else {
+        console.log('User location data is not available');
+      }
+    } catch (error) {
+      console.error('Error storing user location:', error);
+    }
+  };
 
   const openThreshold = () => {
     setShowThreshold(true);
@@ -300,7 +347,15 @@ const HomeScreen = ({navigation}: Props) => {
 
   const submitLocation = async () => {
     console.log('Submitting coordinates');
+
     try {
+      // Always fetch the token directly from storage
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('Token is missing, please log in again');
+        return;
+      }
+
       await axios.put(
         `${URI}/update-coor`,
         {
@@ -313,10 +368,13 @@ const HomeScreen = ({navigation}: Props) => {
           },
         },
       );
-      loadUser()(dispatch);
-    } catch (error) {
+
+      console.log('Coordinates submitted successfully');
+      dispatch(loadUser());
+    } catch (error: any) {
       if (error.response && error.response.status === 401) {
         console.error('Unauthorized: Please log in again');
+        // Optional: Handle logout or redirect to login screen
       } else {
         console.error('An error occurred:', error.message);
       }
@@ -324,7 +382,7 @@ const HomeScreen = ({navigation}: Props) => {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1 pb-20">
       <StatusBar
         animated={true}
         backgroundColor={'#fff'}
@@ -387,27 +445,40 @@ const HomeScreen = ({navigation}: Props) => {
         transparent={true}
         visible={showThreshold}
         onRequestClose={closeThreshold}>
-        <View style={styles.modalContainer}>
-          <Text>
-            Adjust proximity threshold (in km):{' '}
-            {newProximityThreshold.toFixed(2)} km
-          </Text>
-          <Slider
-            style={{width: '100%', marginTop: 10}}
-            minimumValue={0.5}
-            maximumValue={10}
-            minimumTrackTintColor="#017E5E"
-            maximumTrackTintColor="#ccc"
-            thumbTintColor="#017E5E"
-            value={newProximityThreshold}
-            onValueChange={setNewProximityThreshold}
-          />
-          <Button
-            title="Confirm"
-            color="#017E5E"
-            onPress={updateProximityThreshold}
-          />
-          <Button title="Close" color="#017E5E" onPress={closeThreshold} />
+        <View style={styles.mainModalContainer}>
+          <View style={styles.modalContainer}>
+            <View style={styles.textContainer}>
+              <Text style={styles.text}>Adjust proximity threshold</Text>
+              <Text style={styles.text}>
+                {newProximityThreshold.toFixed(2)} km
+              </Text>
+            </View>
+            <Slider
+              minimumValue={0.5}
+              maximumValue={10}
+              minimumTrackTintColor="#017E5E"
+              maximumTrackTintColor="#6F6F6F"
+              thumbTintColor="#017E5E"
+              value={newProximityThreshold}
+              onValueChange={setNewProximityThreshold}
+            />
+            <Text style={styles.information}>
+              Once set, we'll prioritize and deliver news, events,and
+              recommendations within your chosen radius
+            </Text>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={updateProximityThreshold}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.button} onPress={closeThreshold}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -415,17 +486,62 @@ const HomeScreen = ({navigation}: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container:{
+  buttonText: {
+    textAlign: 'center',
+    color: '#fff',
+  },
+  information: {
+    marginTop: 10,
+    marginBottom: 20,
+    fontSize: 11,
+    width: '100%',
+    textAlign: 'center',
+  },
+  button: {
+    borderColor: '#c0c0c0',
+    elevation: 10,
+    borderRadius: 30,
+    borderWidth: 1,
+    padding: 10,
+    width: '40%',
+    backgroundColor: '#017E5E',
+  },
+  text: {
+    fontSize: 20,
+    fontFamily: 'Roboto',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  textContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    display: 'flex',
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  container: {
     marginTop: 40,
   },
+  mainModalContainer: {
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalContainer: {
-    padding: 20,
+    width: '90%',
+    paddingVertical: 60,
+    padding: 15,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderColor: '#c0c0c0',
+    borderWidth: 1,
+    backgroundColor: '#fff',
   },
 });
 

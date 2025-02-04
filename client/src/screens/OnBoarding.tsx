@@ -19,7 +19,7 @@ export default function OnBoarding() {
 
   const handleDone = () => {
     setItem('onBoarded', '1');
-    navigation.navigate('Home');
+    navigation.navigate('Login');
   };
 
   const doneButton = require('../assets/onboard/done2.png');

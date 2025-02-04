@@ -11,6 +11,7 @@ import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
 import {createPostAction} from '../../redux/actions/postAction';
+import {CommonActions} from '@react-navigation/native'; // Import for navigation reset
 
 type Props = {
   navigation: any;
@@ -62,7 +63,18 @@ const PostScreen = ({navigation}: Props) => {
     if (title !== '' || (image !== '' && !isLoading)) {
       createPostAction(title, image, user, replies)(dispatch);
     }
-    navigation.navigate('Home');
+
+    // Add a 1-second delay before navigating to Home and resetting the stack
+    setTimeout(() => {
+      // Reset the navigation stack to simulate a full refresh
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0, // Navigate to the first screen (Home)
+          routes: [{name: 'Home'}],
+        }),
+      );
+      // Alternatively, you could clear/reset relevant states here as needed
+    }, 1000); // 1000ms delay = 1 second
   };
 
   return (
@@ -207,9 +219,9 @@ const styles = StyleSheet.create({
     margin: 20,
     marginVertical: 8,
   },
-  uploadButtonText:{
+  uploadButtonText: {
     fontSize: 17,
-    fontWeight: '400'
+    fontWeight: '400',
   },
   uploadIcon: {
     width: 28,
@@ -252,10 +264,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  uploadContainer:{
-    flexDirection:'row',
+  uploadContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-  }
+  },
 });
 
 export default PostScreen;

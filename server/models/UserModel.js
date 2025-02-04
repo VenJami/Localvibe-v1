@@ -11,6 +11,14 @@ const userSchema = new mongoose.Schema(
     userName: {
       type: String,
     },
+    firstName: {
+      type: String,
+      required: [true, "Please enter your first name"],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Please enter your last name"],
+    },
     bio: {
       type: String,
     },
@@ -45,6 +53,14 @@ const userSchema = new mongoose.Schema(
       url: {
         type: String,
         required: [true, "Please upload one profile picture!"],
+      },
+    },
+    coverPhoto: {
+      public_id: {
+        type: String,
+      },
+      url: {
+        type: String,
       },
     },
     followers: [

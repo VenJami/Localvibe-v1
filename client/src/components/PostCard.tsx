@@ -10,6 +10,8 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {Image} from 'react-native';
 import getTimeDuration from '../common/TimeGenerator';
+import {Share} from 'react-native'; // For sharing functionality
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   addLikes,
   getAllPosts,
@@ -22,7 +24,7 @@ import {
   removeInteraction,
   updateInteraction,
 } from '../../redux/actions/userAction';
-
+import {createOrUpdateReportAction} from '../../redux/actions/reportAction'; 
 type Props = {
   navigation: any;
   item: any;
@@ -34,7 +36,6 @@ type Props = {
 const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
   const {user, token, users} = useSelector((state: any) => state.user);
   const {posts} = useSelector((state: any) => state.post);
-  const [openModal, setOpenModal] = useState(false);
   const dispatch = useDispatch();
   const {pins} = useSelector((state: any) => state.pin);
   const userPin = pins.find(
@@ -48,7 +49,7 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
   });
   const time = item?.createdAt;
   const formattedDuration = getTimeDuration(time);
-
+ const [isShareActive, setIsShareActive] = useState(false);
   const profileHandler = async (e: any) => {
     await axios
       .get(`${URI}/get-user/${e._id}`, {
@@ -92,6 +93,36 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
         getAllPosts()(dispatch);
       });
   };
+useEffect(() => {
+  // Load share state from AsyncStorage when the component mounts
+  const loadShareState = async () => {
+    const sharedStatus = await AsyncStorage.getItem(`sharedPost_${item._id}`);
+    if (sharedStatus === 'true') {
+      setIsShareActive(true);
+    }
+  };
+  loadShareState(); // Check share status on mount
+}, [item._id]);
+
+const shareHandler = async () => {
+  try {
+    // Share the post
+    await Share.share({
+      message: `Check out this post: ${item.title}`,
+    });
+
+    // Update the share status in local state
+    if (isShareActive) {
+      setIsShareActive(false);
+      await AsyncStorage.removeItem(`sharedPost_${item._id}`); // Remove shared status
+    } else {
+      setIsShareActive(true);
+      await AsyncStorage.setItem(`sharedPost_${item._id}`, 'true'); // Save shared status
+    }
+  } catch (error) {
+    alert('Error sharing post: ' + error.message);
+  }
+};
 
   useEffect(() => {
     if (users) {
@@ -103,6 +134,51 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
     }
   }, [users]);
 
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const reportReasons = [
+    {label: 'Violent content', value: 'violent'},
+    {label: 'Explicit Content', value: 'explicit'},
+    {label: 'Hate speech', value: 'hate'},
+    {label: 'Illegal activities', value: 'illegal'},
+    {label: 'Others', value: 'others'},
+  ];
+const handleConfirmReport = () => {
+  console.log('Confirm Report button clicked'); // Log action initiation
+
+  if (selectedReason) {
+    console.log('Selected Reason:', selectedReason); // Log the selected reason
+    console.log('Reporting User ID:', user._id); // Log the reporting user's ID
+    console.log('Reported Item ID:', item._id); // Log the ID of the reported post
+    console.log('Report Type: post'); // Log the assumed type
+    console.log(selectedReason);
+    // Dispatch the report action
+    dispatch(
+      createOrUpdateReportAction(
+        user._id, // The reporting user's ID
+        item._id, // The ID of the reported post
+        'post', // Assuming this is a post
+        selectedReason, // The selected reason for reporting
+      ),
+    );
+
+    console.log('Report dispatched successfully.'); // Confirm dispatch success
+
+    setOpenModal(false); // Close the modal
+    console.log('Modal closed.'); // Confirm modal closure
+
+    setSelectedReason(null); // Reset the selected reason
+    console.log('Selected reason reset to null.'); // Confirm reset
+  } else {
+    console.log('No reason selected. Report not dispatched.'); // Log if no reason was selected
+  }
+};
+
+
+  const handleCancelReport = () => {
+    setOpenModal(false); // Close the modal without reporting
+    setSelectedReason(null); // Reset the selected reason
+  };
   return (
     <View style={styles.container}>
       <View style={styles.postContainer}>
@@ -124,27 +200,24 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
             </View>
 
             {(item?.user.accountType === 'prembusiness' ||
-              item?.user.accountType === 'business') &&
-              userPin && (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('Map', {
-                      latitude: userPin.latitude,
-                      longitude: userPin.longitude,
-                    })
-                  }>
-                  <Text style={styles.userNameText}>Open Map</Text>
-                </TouchableOpacity>
-              )}
+              item?.user.accountType === 'business') && (
+              <TouchableOpacity
+                style={styles.openMap}
+                onPress={() =>
+                  navigation.navigate('Map', {
+                    latitude: userPin.latitude,
+                    longitude: userPin.longitude,
+                  })
+                }>
+                <Text style={styles.userNameText}>Open Map</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.postActions}>
-              <TouchableOpacity
-                onPress={() =>
-                  item.user._id === user._id && setOpenModal(true)
-                }>
+              <TouchableOpacity onPress={() => setOpenModal(true)}>
                 <Image
-                  source={require('../assets/options.png')}
-                  style={styles.moreOptions}
+                  source={require('../assets/report.png')}
+                  style={styles.report}
                 />
               </TouchableOpacity>
             </View>
@@ -172,16 +245,26 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
 
         <View style={styles.reactsRow}>
           <TouchableOpacity onPress={() => reactsHandler(item)}>
-            <Image
-              source={{
-                uri:
-                  item.likes.find((i: any) => i.userId === user._id) ||
-                  item.likes.length === 0
-                    ? 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png'
-                    : 'https://cdn-icons-png.flaticon.com/512/2589/2589197.png',
-              }}
-              style={styles.reactIcon}
-            />
+            {item.likes.length > 0 ? (
+              <>
+                {item.likes.find((i: any) => i.userId === user._id) ? (
+                  <Image
+                    source={require('../assets/reactActive.png')}
+                    style={styles.reactIcon}
+                  />
+                ) : (
+                  <Image
+                    source={require('../assets/react.png')}
+                    style={styles.reactIcon}
+                  />
+                )}
+              </>
+            ) : (
+              <Image
+                source={require('../assets/react.png')}
+                style={styles.reactIcon}
+              />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
@@ -192,17 +275,17 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
               });
             }}>
             <Image
-              source={{
-                uri: 'https://i.ibb.co/YT9d89m/comment-alt-middle-1.png',
-              }}
+              source={require('../assets/comment.png')}
               style={styles.commentIcon}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={shareHandler}>
             <Image
-              source={{
-                uri: 'https://cdn-icons-png.flaticon.com/512/3905/3905866.png',
-              }}
+              source={
+                isShareActive
+                  ? require('../assets/shareActive.png') // Active state image
+                  : require('../assets/share.png') // Default state image
+              }
               style={styles.shareIcon}
             />
           </TouchableOpacity>
@@ -257,22 +340,41 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
               animationType="fade"
               transparent={true}
               visible={openModal}
-              onRequestClose={() => {
-                setOpenModal(!openModal);
-              }}>
-              <TouchableWithoutFeedback onPress={() => setOpenModal(false)}>
-                <View style={styles.modalBackground}>
-                  <TouchableWithoutFeedback onPress={() => setOpenModal(true)}>
-                    <View style={styles.modalContent}>
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => deletePostHandler(item._id)}>
-                        <Text style={styles.deleteText}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableWithoutFeedback>
+              onRequestClose={handleCancelReport}>
+              <View style={styles.modalBackground}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>Report Post</Text>
+                  </View>
+                  {reportReasons.map(reason => (
+                    <TouchableOpacity
+                      key={reason.value}
+                      onPress={() => setSelectedReason(reason.value)}>
+                      <Text
+                        style={
+                          selectedReason === reason.value
+                            ? styles.selectedReason
+                            : styles.reasonText
+                        }>
+                        {reason.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      onPress={handleConfirmReport}
+                      style={styles.confirmButton}>
+                      <Text style={styles.buttonText}>Confirm</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleCancelReport}
+                      style={styles.cancelButton}>
+                      <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </TouchableWithoutFeedback>
+              </View>
             </Modal>
           </View>
         )}
@@ -284,9 +386,11 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
 export default PostCard;
 
 const styles = StyleSheet.create({
+  openMap: {
+    marginLeft: 40,
+  },
   container: {
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#F1FFF8',
     backgroundColor: '#fff',
@@ -295,13 +399,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 10,
-    margin: 10,
+    borderRadius: 5,
+    margin: 5,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 2,
   },
   userRow: {
     flexDirection: 'row',
@@ -338,10 +438,11 @@ const styles = StyleSheet.create({
     color: '#555',
     fontSize: 12,
   },
-  moreOptions: {
-    height: 15,
-    width: 30,
-    resizeMode: 'cover',
+  report: {
+    marginTop: 2,
+    height: 25,
+    width: 25,
+    resizeMode: 'contain',
     marginLeft: 80,
   },
   postImageContainer: {
@@ -358,16 +459,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   reactIcon: {
+    marginTop: 3,
     width: 25,
     height: 25,
   },
   commentIcon: {
-    width: 25,
-    height: 25,
+    width: 30,
+    height: 30,
   },
   shareIcon: {
-    width: 25,
-    height: 25,
+    width: 30,
+    height: 30,
   },
   repliesRow: {
     flexDirection: 'row',
@@ -382,30 +484,79 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalContainer: {
-    flex: 1,
+    flex: 1, // Ensures the modal takes up the entire screen
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
   modalBackground: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Black with 0.5 opacity
   },
   modalContent: {
-    width: 250,
+    backgroundColor: '#fff',
+    borderRadius: 10,
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-  },
-  deleteButton: {
-    paddingVertical: 10,
+    width: '80%',
+    maxWidth: 300, // Optional: to control the max width of the modal
     alignItems: 'center',
-    backgroundColor: 'red',
-    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 10, // For Android shadow effect
   },
-  deleteText: {
-    color: 'white',
+  modalTitleContainer: {
+    width: '90%',
+    borderBottomColor: '#000',
+    borderBottomWidth: 2,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    lineHeight: 20,
+    textAlign: 'center',
+    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#017E5E',
+  },
+  radioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  selectedReason: {
+    color: '#017E5E', // Selected reason color
+    fontSize: 16,
+    marginBottom: 15,
+    fontWeight: 'bold',
+  },
+  reasonText: {
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+  },
+  confirmButton: {
+    backgroundColor: '#FF1212',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#017E5E',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });

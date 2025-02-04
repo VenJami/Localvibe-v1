@@ -6,8 +6,12 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  StatusBar,
+  Modal,  
+  ScrollView,
 } from 'react-native';
 import React, {useState} from 'react';
+import CheckBox from '@react-native-community/checkbox';
 
 type Props = {
   navigation: any;
@@ -16,18 +20,25 @@ type Props = {
 const SignupScreen = ({navigation}: Props) => {
   const backgroundImage = require('../assets/background.png');
   const logo = require('../assets/logo.png');
-
+  const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const handleTermsPress = () => {
+    setIsModalVisible(true); 
+  };
 
-  // Regular expression for email validation
+  const handleModalClose = () => {
+    setIsModalVisible(false); // Close the modal
+  };
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Regular expression for password validation (at least 8 characters, 1 letter, 1 number)
   const validatePassword = (password: string) => {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
     return passwordRegex.test(password);
@@ -59,7 +70,13 @@ const SignupScreen = ({navigation}: Props) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isFocused && styles.containerFocused]}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+
       <Image style={styles.backgroundImage} source={backgroundImage} />
       <View style={styles.body}>
         <View style={styles.logoContainer}>
@@ -79,6 +96,8 @@ const SignupScreen = ({navigation}: Props) => {
                     placeholder="Email or Phone Number"
                     value={email}
                     onChangeText={text => setEmail(text)}
+                    onFocus={() => setIsFocused(true)} // Handle focus
+                    onBlur={() => setIsFocused(false)} // Handle blur
                     style={styles.input}
                   />
                 </View>
@@ -88,6 +107,8 @@ const SignupScreen = ({navigation}: Props) => {
                     placeholder="Password"
                     value={password}
                     onChangeText={text => setPassword(text)}
+                    onFocus={() => setIsFocused(true)} // Handle focus
+                    onBlur={() => setIsFocused(false)} // Handle blur
                     style={styles.input}
                     secureTextEntry={true}
                   />
@@ -98,6 +119,8 @@ const SignupScreen = ({navigation}: Props) => {
                     placeholder="Confirm Password"
                     value={confirmPassword}
                     onChangeText={text => setConfirmPassword(text)}
+                    onFocus={() => setIsFocused(true)} // Handle focus
+                    onBlur={() => setIsFocused(false)} // Handle blur
                     style={styles.input}
                     secureTextEntry={true}
                   />
@@ -105,15 +128,159 @@ const SignupScreen = ({navigation}: Props) => {
               </View>
             </View>
           </View>
+
+          <View style={styles.termsMainContainer}>
+            <View style={styles.termsContainer}>
+              <Text style={styles.normalText}>Agree to </Text>
+              <TouchableOpacity onPress={handleTermsPress}>
+                <Text style={styles.termsText}>Terms and Conditions</Text>
+              </TouchableOpacity>
+
+              <CheckBox
+                value={isChecked}
+                onValueChange={setIsChecked}
+                style={styles.checkbox}
+              />
+            </View>
+          </View>
+
+          <Modal
+            transparent={true}
+            visible={isModalVisible}
+            animationType="slide"
+            onRequestClose={handleModalClose}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalWrapper}>
+                <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                  <Text style={styles.modalHeader}>Terms and Conditions</Text>
+
+                  <Text style={styles.modalTextTitle}>
+                    1. Acceptance of Terms
+                  </Text>
+                  <Text style={styles.modalText}>
+                    By creating an account, accessing, or using LocalVibe, you
+                    agree to abide by these Terms, our Privacy Policy, and any
+                    additional guidelines or future modifications.
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>
+                    2. Use of the Service
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • Eligibility: You must be at least 13 years old to use
+                    LocalVibe.
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • License: LocalVibe grants you a limited, non-transferable,
+                    and non-exclusive license to use the app for personal,
+                    non-commercial use.
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • Account Security: You are responsible for maintaining the
+                    confidentiality of your account login credentials and are
+                    liable for any activities conducted under your account.
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>3. User Conduct</Text>
+                  <Text style={styles.modalText}>
+                    • Community Guidelines: When using LocalVibe, you agree to
+                    respect other users and engage positively with the
+                    community. Harassment, abusive language, and inappropriate
+                    content are prohibited.
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • Prohibited Activities: You agree not to use LocalVibe for
+                    unlawful activities, including but not limited to:
+                  </Text>
+                  <Text style={styles.modalTextText}>
+                    {' '}
+                    o Posting or sharing false, harmful, or offensive content
+                  </Text>
+                  <Text style={styles.modalTextText}>
+                    {' '}
+                    o Engaging in phishing, spamming, or malicious software
+                    distribution
+                  </Text>
+                  <Text style={styles.modalTextText}>
+                    {' '}
+                    o Impersonating others or using fake identities
+                  </Text>
+                  <Text style={styles.modalTextText}>
+                    {' '}
+                    o Accessing or tampering with LocalVibe’s security features
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>
+                    4. Content and Intellectual Property
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • User-Generated Content: LocalVibe allows users to post
+                    content, including images, text, and comments. You retain
+                    ownership of your content but grant LocalVibe a worldwide,
+                    royalty-free, and non-exclusive license to use, display,
+                    modify, and distribute this content on the platform.
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • Intellectual Property: All logos, trademarks, graphics,
+                    and content related to LocalVibe are the property of
+                    LocalVibe and protected by intellectual property laws. You
+                    may not use these materials without our permission.
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>
+                    5. Account Suspension and Termination
+                  </Text>
+                  <Text style={styles.modalText}>
+                    LocalVibe reserves the right to suspend or terminate
+                    accounts that violate these Terms. Repeated or severe
+                    violations, such as posting offensive content or engaging in
+                    fraudulent activities, may lead to permanent suspension or
+                    deletion of the account.
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>
+                    6. Limitation of Liability
+                  </Text>
+                  <Text style={styles.modalText}>
+                    LocalVibe is provided on an “as-is” basis, and we make no
+                    guarantees regarding the app's functionality, security, or
+                    reliability. We are not liable for any damages or losses
+                    arising from your use of LocalVibe, including but not
+                    limited to personal injury, data loss, or unauthorized
+                    access to your account.
+                  </Text>
+
+                  <Text style={styles.modalTextTitle}>7. Changes to Terms</Text>
+                  <Text style={styles.modalText}>
+                    LocalVibe may update these Terms from time to time. Any
+                    modifications will be posted in the app, and continued use
+                    of LocalVibe following updates constitutes acceptance of the
+                    revised Terms.
+                  </Text>
+                </ScrollView>
+
+                {/* Close button */}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={handleModalClose}>
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
           <View style={styles.signInSignup}>
-            <TouchableOpacity onPress={handleSignUpPress}>
-              <View style={styles.signUpButton}>
-                <Text style={styles.signUpText}>Sign Up</Text>
+            <TouchableOpacity onPress={handleSignUpPress} disabled={!isChecked}>
+              <View
+                style={[
+                  styles.signUpButton,
+                  {backgroundColor: isChecked ? '#017E5E' : '#cccccc'},
+                ]}>
+                <Text style={styles.signUpText}>Register</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <View style={styles.signInButton}>
-                <Text style={styles.signInText}>Sign In</Text>
+                <Text style={styles.signInText}>Back</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -124,21 +291,92 @@ const SignupScreen = ({navigation}: Props) => {
 };
 
 const styles = StyleSheet.create({
+  termsTriggerText: {
+    color: '#017E5E',
+    textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalWrapper: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+  },
+  scrollViewContent: {
+    paddingVertical: 20,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#017E5E',
+    textAlign: 'center',
+  },
+  modalTextTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  modalText: {
+    fontSize: 14,
+    marginTop: 5,
+    lineHeight: 20,
+  },
+  modalTextText: {
+    fontSize: 14,
+    marginLeft: 15,
+    lineHeight: 20,
+  },
+  closeButton: {
+    alignSelf: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#017E5E',
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  termsContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  termsText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#017E5E',
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#F1FFF8',
+  },
+  containerFocused: {
+    position: 'absolute',
+    top: -150,
   },
   backgroundImage: {
     position: 'absolute',
     top: 0,
     width: '100%',
-    height: '76%',
+    height: 750,
   },
   body: {
     flexDirection: 'column',
   },
   logoContainer: {
-    marginTop: '9%',
+    marginTop: '18%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -147,11 +385,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 163.77,
-    height: 163.77,
+    width: 180,
+    height: 180,
   },
   gettingStarterBlock: {
-    marginTop: '23%',
+    marginTop: '30%',
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
@@ -228,7 +466,7 @@ const styles = StyleSheet.create({
   signUpButton: {
     width: 341,
     height: 39,
-    backgroundColor: '#2f855a',
+    backgroundColor: '#017E5E',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',

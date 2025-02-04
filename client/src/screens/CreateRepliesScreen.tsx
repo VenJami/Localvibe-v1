@@ -6,9 +6,10 @@ import {
   TextInput,
   ScrollView,
   StatusBar,
+  TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import React, {useState} from 'react';
-import {TouchableOpacity} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker';
 import getTimeDuration from '../common/TimeGenerator';
@@ -104,143 +105,221 @@ const CreateRepliesScreen = ({navigation, route}: Props) => {
         });
     }
   };
+
   return (
-    <SafeAreaView className="bg-[#F1FFF8]">
+    <SafeAreaView style={styles.container}>
       <StatusBar
         animated={true}
         backgroundColor={'#F1FFF8'}
         barStyle={'dark-content'}
         showHideTransition={'fade'}
       />
-      <View className="flex-row items-center p-3 bg-[#F1FFF8]">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image
-            source={{
-              uri: 'https://cdn-icons-png.flaticon.com/512/2961/2961937.png',
-            }}
-            width={25}
-            height={25}
-          />
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Image source={require('../assets/goBack.png')} />
         </TouchableOpacity>
-        <Text className="text-[20px] left-4 font-[600] text-[#000]">Reply</Text>
+        <Text style={styles.headerText}>Reply</Text>
       </View>
-      <View className="h-[88vh] justify-between flex-col">
-        <ScrollView className="relative" showsVerticalScrollIndicator={false}>
-          <View className="flex-row w-full justify-between p-3">
-            <View className="flex-row items-center">
-              <Image
-                source={{uri: post.user.avatar.url}}
-                width={40}
-                height={40}
-                borderRadius={100}
-              />
-              <View className="pl-3">
-                <Text className="text-black font-[500] text-[18px]">
-                  {post.user.name}
-                </Text>
-                <Text className="text-black font-[500] text-[16px]">
-                  {post.title}
-                </Text>
-              </View>
-            </View>
-            <View className="flex-row items-center">
-              <Text className="text-[#000000b6]">{formattedDuration}</Text>
-              <TouchableOpacity>
-                <Text className="text-[#000] pl-4 font-[700] mb-[8px]">
-                  ...
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View className="ml-[50px] my-3">
-            {post.image && (
-              <Image
-                source={{uri: post.image.url}}
-                style={{
-                  width: '90%',
-                  aspectRatio: 1,
-                  borderRadius: 10,
-                  zIndex: 1111,
-                }}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-          {/* {post.image ? (
-              <View className="absolute top-[125] left-8 h-[75%] w-[1px] bg-[#00000017]" />
-            ) : (
-              <View className="absolute top-12 left-5 h-[60%] w-[1px] bg-[#00000017]" />
-            )} */}
-
-          <View className="p-3">
-            <View className="flex-row">
-              <Image
-                source={{uri: user.avatar.url}}
-                width={40}
-                height={40}
-                borderRadius={100}
-              />
-              <View className="pl-3">
-                <Text className="text-black font-[500] text-[18px]">
-                  {user.name}
-                </Text>
-                <TextInput
-                  placeholder={`Reply to ${post.user.name}...`}
-                  placeholderTextColor={'#666'}
-                  className="mt-[-5px] ml-1 text-black"
-                  value={title}
-                  onChangeText={setTitle}
-                />
-                <TouchableOpacity className="mt-2" onPress={ImageUpload}>
+      <View style={styles.body}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.postContainer}>
+            <View style={styles.postInfo}>
+              <View style={styles.userInfo}>
+                <View style={styles.userAvatarContainer}>
                   <Image
-                    source={{
-                      uri: 'https://cdn-icons-png.flaticon.com/512/10857/10857463.png',
-                    }}
-                    style={{
-                      width: 20,
-                      height: 20,
-                    }}
+                    source={{uri: post.user.avatar.url}}
+                    style={styles.userAvatar}
                   />
-                </TouchableOpacity>
+                  <Image source={require('../assets/line.png')} />
+                </View>
+                <View style={styles.userDetails}>
+                  <Text style={styles.userName}>{post.user.name}</Text>
+                  <Text style={styles.timeText}>{formattedDuration}</Text>
+                  <Text style={styles.postTitle}>{post.title}</Text>
+                </View>
               </View>
             </View>
             <View>
-              {image && (
+              {post.image && (
                 <Image
-                  source={{uri: image}}
-                  style={{
-                    width: '85%',
-                    aspectRatio: 1,
-                    borderRadius: 10,
-                    zIndex: 1111,
-                    marginLeft: 45,
-                    marginVertical: 20,
-                  }}
+                  source={{uri: post.image.url}}
+                  style={styles.postImage}
+                  resizeMode="contain"
                 />
               )}
             </View>
-          </View>
-        </ScrollView>
-        <View>
-          <View className="p-2">
-            <View className="w-full flex-row justify-end">
-              <TouchableOpacity
-                onPress={createReplies}
-                style={{
-                  backgroundColor: '#017E5E',
-                  borderRadius: 8,
-                  paddingVertical: 10,
-                  paddingHorizontal: 15,
-                  width: '100%',
-                }}>
-                <Text className="text-white text-center">Reply</Text>
-              </TouchableOpacity>
+
+            <View style={styles.replyContainer}>
+              <View style={styles.replyHeader}>
+                <View style={styles.userAvatarContainer}>
+                  <Image
+                    source={{uri: user.avatar.url}}
+                    style={styles.replyAvatar}
+                  />
+                </View>
+
+                <View style={styles.replyInputContainer}>
+                  <Text style={styles.replyUserName}>{user.name}</Text>
+                  <TextInput
+                    placeholder={`Reply to ${post.user.name}...`}
+                    placeholderTextColor={'#666'}
+                    style={styles.replyInput}
+                    value={title}
+                    onChangeText={setTitle}
+                  />
+                </View>
+              </View>
+              <View>
+                {image && (
+                  <Image source={{uri: image}} style={styles.replyImage} />
+                )}
+              </View>
+
+              <View style={styles.footerContainer}>
+                <TouchableOpacity
+                  style={styles.uploadImageButton}
+                  onPress={ImageUpload}>
+                  <Image
+                    style={styles.attachImage}
+                    source={require('../assets/attach.png')}
+                  />
+                </TouchableOpacity>
+                <View style={styles.replyButtonContainer}>
+                  <TouchableOpacity
+                    onPress={createReplies}
+                    style={styles.replyButton}>
+                    <Text style={styles.replyButtonText}>Reply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  postContainer:{
+    margin: 30,
+  },
+  container: {
+    backgroundColor: '#fff',
+  },
+  header: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    shadowColor: 'black',
+    elevation: 20,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerText: {
+    width: '75%',
+    paddingLeft: 16,
+    textAlign: 'center',
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  postInfo: {
+    flexDirection: 'row',
+  },
+  userInfo: {
+    flexDirection: 'row',
+  },
+  userAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 100,
+  },
+  userDetails: {
+    marginLeft: '5%',
+  },
+  userName: {
+    color: 'black',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  timePost: {
+    color: '#737373',
+  },
+  userAvatarContainer: {
+    width: 50,
+    alignItems: 'center',
+  },
+  postTitle: {
+    textAlign: 'justify',
+    color: 'black',
+    fontSize: 16,
+    width: 270,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#000000b6',
+    marginBottom: '3%',
+  },
+  postImage: {
+    width: '90%',
+    borderRadius: 10,
+  },
+  replyContainer: {},
+  replyHeader: {
+    flexDirection: 'row',
+  },
+  replyAvatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 100,
+  },
+  replyInputContainer: {
+    marginLeft: '5%',
+    width: '82%',
+  },
+  replyUserName: {
+    color: 'black',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  replyInput: {
+    color: 'black',
+    width: '100%',
+  },
+  uploadImageButton: {
+    marginTop: 8,
+  },
+  uploadImageIcon: {
+    width: 20,
+    height: 20,
+  },
+  replyButtonContainer: {
+    padding: 8,
+  },
+  replyButton: {
+    backgroundColor: '#017E5E',
+    borderRadius: 17,
+    paddingVertical: 5,
+    paddingHorizontal: 50,
+  },
+  replyButtonText: {
+    color: 'white',
+    textAlign: 'center',
+  },
+  footerContainer: {
+    justifyContent: 'space-between',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  attachImage: {
+    marginLeft: '35%',
+  },
+});
 
 export default CreateRepliesScreen;

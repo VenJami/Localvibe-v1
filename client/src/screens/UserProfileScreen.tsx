@@ -6,6 +6,7 @@ import {
   Image,
   ScrollView,
   StatusBar,
+  StyleSheet,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
@@ -71,11 +72,11 @@ const UserProfileScreen = ({navigation, route}: Props) => {
   return (
     <>
       {data && (
-        <SafeAreaView className="bg-[#F1FFF8]">
+        <SafeAreaView style={styles.safeArea}>
           <StatusBar backgroundColor="#F1FFF8" barStyle="dark-content" />
           {imagePreview ? (
             <TouchableOpacity
-              className="h-screen bg-white w-full items-center justify-center"
+              style={styles.imagePreview}
               onPress={() => setImagePreview(!imagePreview)}>
               <Image
                 source={{uri: data.avatar.url}}
@@ -85,100 +86,132 @@ const UserProfileScreen = ({navigation, route}: Props) => {
               />
             </TouchableOpacity>
           ) : (
-            <View className="p-2">
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Image
-                  source={{
-                    uri: 'https://cdn-icons-png.flaticon.com/512/2223/2223615.png',
-                  }}
-                  height={25}
-                  width={25}
-                />
-              </TouchableOpacity>
+            <View style={styles.container}>
+              <View style={styles.header}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => navigation.goBack()}>
+                  <Image source={require('../assets/goBack.png')} />
+                </TouchableOpacity>
+                <Text style={styles.headerText}>Profile</Text>
+              </View>
               <ScrollView showsVerticalScrollIndicator={false}>
-                <View className="w-full flex-row">
-                  <View className="w-[80%]">
-                    <Text className="pt-3 text-[22px] text-black">
-                      {data.name}
-                    </Text>
-                    {data.userName && (
-                      <Text className="py-2 text-[16px] text-[#0000009d]">
-                        {data.userName}
-                      </Text>
-                    )}
-                    {data.bio && (
-                      <Text className="py-2 text-[16px] text-[#000000c4]">
-                        {data.bio}
-                      </Text>
-                    )}
-                    <TouchableOpacity
-                      onPress={() =>
-                        navigation.navigate('FollowerCard', {
-                          item: data,
-                          followers: data?.followers,
-                          following: data?.following,
-                        })
-                      }>
-                      <Text className="py-2 text-[18px] text-[#000000c7]">
-                        {data.followers.length} followers
-                      </Text>
-                    </TouchableOpacity>
+                <View style={styles.coverPhotoContainer}>
+                  <Image
+                    style={styles.coverPhoto}
+                    source={require('../assets/cover.png')}
+                  />
+                </View>
+
+                <View style={styles.mainContainer}>
+                  <View style={styles.infoContainer}>
+                    <View style={styles.avatarContainer}>
+                      <TouchableOpacity
+                        onPress={() => setImagePreview(!imagePreview)}>
+                        <View style={styles.avatarContainer}>
+                          <Image
+                            source={{uri: data.avatar.url}}
+                            style={styles.avatar}
+                          />
+                          {data.role === 'Admin' && (
+                            <Image
+                              source={{
+                                uri: 'https://cdn-icons-png.flaticon.com/128/1828/1828640.png',
+                              }}
+                              width={18}
+                              height={18}
+                              style={styles.adminIcon}
+                            />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.nameContainer}>
+                      <Text style={styles.userName}>{data.name}</Text>
+                      <TouchableOpacity
+                        onPress={() =>
+                          navigation.navigate('FollowerCard', {
+                            item: data,
+                            followers: data?.followers,
+                            following: data?.following,
+                          })
+                        }>
+                        <Text style={styles.followers}>
+                          {data.followers.length} followers
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.followButtonContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.followButton,
+                          data.followers.find((i: any) => i.userId === user._id)
+                            ? styles.followingButton
+                            : styles.unfollowedButton,
+                        ]}
+                        onPress={FollowUnfollowHandler}>
+                        <Text
+                          style={[
+                            styles.followButtonText,
+                            data.followers.find(
+                              (i: any) => i.userId === user._id,
+                            )
+                              ? styles.followingText
+                              : styles.unfollowedText,
+                          ]}>
+                          {data.followers.find(
+                            (i: any) => i.userId === user._id,
+                          )
+                            ? 'Following'
+                            : 'Follow'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => setImagePreview(!imagePreview)}>
-                    <View className="relative">
-                      <Image
-                        source={{uri: data.avatar.url}}
-                        width={60}
-                        height={60}
-                        borderRadius={100}
-                      />
-                      {data.role === 'Admin' && (
-                        <Image
-                          source={{
-                            uri: 'https://cdn-icons-png.flaticon.com/128/1828/1828640.png',
-                          }}
-                          width={18}
-                          height={18}
-                          className="ml-2 absolute bottom-0 left-0"
-                        />
+
+                  <View style={styles.bioContainer}>
+                    <View style={styles.bioContainer2}>
+                      {data.bio && (
+                        <Text style={styles.userBio}>{data.bio}</Text>
                       )}
                     </View>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  className="mt-2 rounded-[8px] w-full flex-row justify-center items-center h-[38px] bg-[#017E5E]"
-                  onPress={FollowUnfollowHandler}>
-                  <Text className="text-white text-[18px]">
-                    {data.followers.find((i: any) => i.userId === user._id)
-                      ? 'Following'
-                      : 'Follow'}
-                  </Text>
-                </TouchableOpacity>
-                <View className="w-full border-b border-b-[#00000032] pt-5 pb-2 relative">
-                  <View className="w-[70%] m-auto flex-row justify-between">
-                    <TouchableOpacity onPress={() => setActive(0)}>
-                      <Text
-                        className="text-[18px] pl-3 text-black"
-                        style={{opacity: active === 0 ? 1 : 0.6}}>
-                        {' '}
-                        Posts
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setActive(1)}>
-                      <Text
-                        className="text-[18px] pl-3 text-black"
-                        style={{opacity: active === 1 ? 1 : 0.6}}>
-                        {' '}
-                        Vibes
-                      </Text>
-                    </TouchableOpacity>
                   </View>
-                  {active === 0 ? (
-                    <View className="w-[50%] absolute h-[1px] bg-black left-[-10px] bottom-0" />
-                  ) : (
-                    <View className="w-[50%] absolute h-[1px] bg-black right-[-10px] bottom-0" />
-                  )}
+                  <View style={styles.tabMainContainer}>
+                    <View style={styles.tabContainer}>
+                      <View style={styles.tabRow}>
+                        <TouchableOpacity onPress={() => setActive(0)}>
+                          <Text
+                            style={[
+                              styles.tab,
+                              active === 0
+                                ? styles.activeText
+                                : styles.inactiveText,
+                            ]}>
+                            Posts
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setActive(1)}>
+                          <Text
+                            style={[
+                              styles.tab,
+                              active === 1
+                                ? styles.activeText
+                                : styles.inactiveText,
+                            ]}>
+                            Vibes
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View
+                        style={[
+                          styles.tabIndicator,
+                          {left: `${active === 0 ? 0 : 50}%`},
+                        ]}
+                      />
+                    </View>
+                  </View>
                 </View>
                 {active === 0 && (
                   <>
@@ -191,13 +224,10 @@ const UserProfileScreen = ({navigation, route}: Props) => {
                         />
                       ))}
                     {postData.length === 0 && (
-                      <Text className="text-black py-10 text-center text-[18px]">
-                        No Post yet!
-                      </Text>
+                      <Text style={styles.noPostText}>No Post yet!</Text>
                     )}
                   </>
                 )}
-
                 {active === 1 && (
                   <>
                     {repliesData &&
@@ -209,10 +239,8 @@ const UserProfileScreen = ({navigation, route}: Props) => {
                           replies={true}
                         />
                       ))}
-                    {active !== 1 && postData.length === 0 && (
-                      <Text className="text-black py-10 text-center text-[18px]">
-                        No Post yet!
-                      </Text>
+                    {repliesData.length === 0 && (
+                      <Text style={styles.noPostText}>No Post yet!</Text>
                     )}
                   </>
                 )}
@@ -224,5 +252,185 @@ const UserProfileScreen = ({navigation, route}: Props) => {
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#ffff',
+  },
+  mainContainer: {
+    backgroundColor: 'white',
+    elevation: 1,
+    zIndex: 1,
+  },
+  infoContainer: {
+    top: -15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+  },
+  avatar: {
+    height: 95,
+    width: 95,
+    borderRadius: 300,
+    position: 'absolute',
+    top: -25,
+    left: 10,
+  },
+  avatarContainer: {
+    width: '20%',
+  },
+  nameContainer: {
+    width: '30%',
+    marginLeft: 5,
+  },
+  followButtonContainer: {
+    width: '30%',
+  },
+  followButton: {
+    marginTop: 17,
+    borderRadius: 100,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#017E5E',
+    width: '90%',
+  },
+  followingButton: {
+    backgroundColor: '#fff',
+  },
+  unfollowedButton: {
+    backgroundColor: '#017E5E',
+  },
+  followButtonText: {
+    fontSize: 15,
+  },
+  followingText: {
+    color: '#017E5E',
+  },
+  unfollowedText: {
+    color: '#fff',
+  },
+  coverPhoto: {
+    height: 140,
+    width: 'auto',
+    resizeMode: 'stretch',
+  },
+  header: {
+    width: '100%',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    shadowColor: 'black',
+    elevation: 20,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerText: {
+    width: '75%',
+    paddingLeft: 16,
+    textAlign: 'center',
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  imagePreview: {
+    flex: 1,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  headerLeft: {
+    width: '80%',
+  },
+  userName: {
+    marginTop: 10,
+    fontSize: 22,
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  userHandle: {
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#0000009d',
+  },
+  bioContainer: {
+    top: -15,
+    width: '100%',
+    alignItems: 'center',
+  },
+  bioContainer2: {
+    width: '70%',
+    alignItems: 'center',
+  },
+  userBio: {
+    paddingVertical: 8,
+    fontSize: 15,
+    color: '#000',
+    fontWeight: '400',
+  },
+  followers: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
+  },
+  adminIcon: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+  },
+  tabMainContainer: {
+    borderBottomColor: '#dedede',
+    borderBottomWidth: 1,
+    paddingBottom: 5,
+  },
+  tabContainer: {
+    marginTop: 15,
+    marginHorizontal: 20,
+    position: 'relative',
+    alignItems: 'center',
+    paddingBottom: 5,
+  },
+  tabRow: {
+    width: '100%',
+    justifyContent: 'space-around',
+    flexDirection: 'row',
+  },
+  tab: {
+    width: '100%',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  activeText: {
+    fontSize: 18,
+    color: '#017E5E',
+  },
+  inactiveText: {
+    fontSize: 18,
+    color: 'black',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    height: 1,
+    width: '50%',
+    backgroundColor: '#017E5E',
+    bottom: 0,
+  },
+  noPostText: {
+    color: 'black',
+    paddingVertical: 40,
+    textAlign: 'center',
+    fontSize: 18,
+  },
+});
 
 export default UserProfileScreen;

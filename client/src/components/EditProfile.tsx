@@ -28,7 +28,11 @@ const EditProfile = ({navigation}: Props) => {
     name: user.name,
     userName: user?.userName,
     bio: user?.bio,
+    email: user?.email,
+    password: user?.password,
   });
+
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmitHandler = async () => {
     if (userData.name.length !== 0 && userData.userName.length !== 0) {
@@ -39,6 +43,8 @@ const EditProfile = ({navigation}: Props) => {
             name: userData.name,
             userName: userData.userName,
             bio: userData.bio,
+            email: userData.email,
+            password: userData.password,
           },
           {
             headers: {
@@ -51,6 +57,9 @@ const EditProfile = ({navigation}: Props) => {
         });
     }
   };
+
+  const handleFocus = () => setIsFocused(true); // Set isFocused to true when input is focused
+  const handleBlur = () => setIsFocused(false); // Set isFocused to false when input loses focus
 
   const ImageUpload = () => {
     ImagePicker.openPicker({
@@ -81,27 +90,32 @@ const EditProfile = ({navigation}: Props) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isFocused && {position: 'absolute', top: -300, width: '100%'}, // Move container up when focused
+      ]}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image
-              style={styles.goBackButton}
-              source={require('../assets/goBack.png')}
-            />
-          </TouchableOpacity>
-          <Image
-            style={styles.logo}
-            source={require('../assets/localvibe.png')}
-          />
-        </View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Image source={require('../assets/goBack.png')} />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Edit Profile</Text>
       </View>
+
+      <View style={styles.bgImageContainer}>
+        <Image style={styles.image} source={require('../assets/cover.png')} />
+      </View>
+
       <View style={styles.container}>
         <View style={styles.formContainer}>
-          <TouchableOpacity onPress={ImageUpload}>
-            <Image source={{uri: avatar}} style={styles.avatar} />
-          </TouchableOpacity>
-
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity onPress={ImageUpload}>
+              <Image source={{uri: avatar}} style={styles.avatar} />
+              <Image/>
+            </TouchableOpacity>
+          </View>
           <View style={styles.formRow}>
             <View style={styles.inputContainer}>
               <View style={styles.infoContainer}>
@@ -110,6 +124,10 @@ const EditProfile = ({navigation}: Props) => {
               </View>
 
               <View style={styles.labelContainer}>
+                <View style={styles.title}>
+                  <Text style={styles.titleText}>Profile</Text>
+                  <View style={styles.hLineContainer}></View>
+                </View>
                 <Text style={styles.label}>Name</Text>
                 <TextInput
                   value={userData.name}
@@ -117,6 +135,8 @@ const EditProfile = ({navigation}: Props) => {
                   placeholder="Enter your name..."
                   placeholderTextColor={'#000'}
                   style={styles.input}
+                  onFocus={handleFocus} // Trigger focus handler
+                  onBlur={handleBlur} // Trigger blur handler
                 />
 
                 <Text style={styles.label}>Username</Text>
@@ -125,7 +145,9 @@ const EditProfile = ({navigation}: Props) => {
                   onChangeText={e => setUserData({...userData, userName: e})}
                   placeholder="Enter your userName..."
                   placeholderTextColor={'#000'}
-                  style={[styles.input, styles.userNameInput]}
+                  style={[styles.input]}
+                  onFocus={handleFocus} // Trigger focus handler
+                  onBlur={handleBlur} // Trigger blur handler
                 />
 
                 <Text style={styles.label}>Bio</Text>
@@ -136,13 +158,41 @@ const EditProfile = ({navigation}: Props) => {
                   placeholderTextColor={'#000'}
                   style={styles.bioInput}
                   multiline={true}
-                  numberOfLines={4}
+                  numberOfLines={2}
+                  onFocus={handleFocus} // Trigger focus handler
+                  onBlur={handleBlur} // Trigger blur handler
+                />
+
+                <View style={styles.title}>
+                  <Text style={styles.titleText}>Account</Text>
+                  <View style={styles.hLineContainer1}></View>
+                </View>
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  value={userData.email}
+                  onChangeText={e => setUserData({...userData, email: e})}
+                  placeholder="Enter your email..."
+                  placeholderTextColor={'#000'}
+                  style={[styles.input]}
+                  onFocus={handleFocus} // Trigger focus handler
+                  onBlur={handleBlur} // Trigger blur handler
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  onChangeText={e => setUserData({...userData, password: e})}
+                  placeholder="Change your password..."
+                  placeholderTextColor={'#000'}
+                  style={[styles.input]}
+                  onFocus={handleFocus} // Trigger focus handler
+                  onBlur={handleBlur} // Trigger blur handler
                 />
               </View>
             </View>
           </View>
 
-          <View style ={styles.doneButtonContainer}>
+          <View style={styles.doneButtonContainer}>
             <TouchableOpacity onPress={handleSubmitHandler}>
               <Text style={styles.doneButton}>Save</Text>
             </TouchableOpacity>
@@ -159,89 +209,111 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#d3d3d3',
-    backgroundColor: '#FFF',
-  },
-  headerLeft: {
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'white',
+    shadowColor: 'black',
+    elevation: 20,
   },
-  goBackButton: {
-    width: 24,
-    height: 24,
+
+  bgImageContainer: {
+    position: 'absolute',
+    top: 60,
   },
-  logo: {
-    height: 60,
+  image: {
+    height: 200,
+    resizeMode: 'stretch',
+  },
+  backButton: {
+    padding: 8,
   },
   headerText: {
-    fontSize: 20,
-    marginLeft: 16,
-    fontWeight: '600',
+    width: '75%',
+    paddingLeft: 16,
+    textAlign: 'center',
+    fontSize: 19,
+    fontWeight: 'bold',
     color: '#000',
   },
   container: {
     flex: 1,
-    marginTop: '30%',
+    marginTop: '23%',
     alignItems: 'center',
   },
   formContainer: {
-    backgroundColor: '#fff',
-    width: '90%',
-    padding: 12,
-    minHeight: 300,
+    width: '100%',
     borderRadius: 10,
     borderColor: '#0000002e',
     borderWidth: 1,
   },
+  title: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  titleText: {
+    width: 'auto',
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#017E5E',
+    marginRight: 10,
+  },
+  hLineContainer: {
+    top: -8,
+    width: '80%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
+  hLineContainer1: {
+    top: -8,
+    width: '76%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
   formRow: {
+    marginTop: 145,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   inputContainer: {
     flex: 1,
-    marginTop: '19%',
   },
   label: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: '#000',
   },
   input: {
-    fontSize: 16,
+    fontSize: 15,
     backgroundColor: '#EDEBEB',
     color: '#000000b0',
-    borderBottomColor: '#00000015',
-    borderBottomWidth: 1,
     borderRadius: 15,
-    marginVertical: 12,
-    padding: 10,
+    borderBottomColor: '#cecece',
+    borderBottomWidth: 1,
+    paddingHorizontal: 10,
+    paddingBottom: 3,
+    paddingTop: 10,
+    marginBottom: 5,
   },
   bioInput: {
-    fontSize: 16,
-    marginTop: 16,
-    marginBottom: 12,
+    fontSize: 15,
     color: '#000000b0',
     borderRadius: 15,
     backgroundColor: '#EDEBEB',
     padding: 10,
     textAlignVertical: 'top',
   },
-  userNameInput: {
-    marginBottom: 16,
+  avatarContainer: {
+    position: 'absolute',
+    marginTop: -15,
+    width: '100%',
+    alignItems: 'center',
   },
   avatar: {
     width: 150,
     height: 150,
     borderRadius: 100,
-    position: 'absolute',
-    marginTop: -85,
-    left: '30%',
     backgroundColor: '#000',
     borderWidth: 1,
     borderColor: '#00000015',
@@ -249,7 +321,6 @@ const styles = StyleSheet.create({
   bioContainer: {
     borderTopColor: '#00000015',
     borderTopWidth: 1,
-    marginTop: 16,
   },
   infoContainer: {
     alignItems: 'center',
@@ -266,10 +337,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   labelContainer: {
-    marginTop: 35,
+    marginHorizontal: 20,
+    marginTop: 15,
   },
-    doneButtonContainer:{
-      marginTop: 20,
+  doneButtonContainer: {
+    marginTop: 20,
     alignItems: 'center',
   },
   doneButton: {
@@ -281,7 +353,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     fontSize: 14,
   },
-
 });
 
 export default EditProfile;

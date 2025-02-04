@@ -11,7 +11,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
-  "author": "Raven Jaminal",
+  "author": "Polaris Jumel",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",

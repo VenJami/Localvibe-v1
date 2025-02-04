@@ -19,6 +19,17 @@ export const createPostAction =
 
       const token = await AsyncStorage.getItem('token');
 
+      console.log('Payload being sent:', {
+        title,
+        image,
+        user,
+      }); // Debugging log
+
+      console.log(
+        'Calling the endpoint:',
+        `${URI}/create-or-update-report`,
+      );
+
       const {data} = await axios.post(
         `${URI}/create-post`,
         {title, image, user, replies},

@@ -47,6 +47,9 @@ app.use("/api/v1", user);
 app.use("/api/v1", post);
 app.use("/api/v1", pin);
 
+const reportRoutes = require("./routes/report");
+app.use("/api/v1", reportRoutes);
+
 // it's for errorHandeling
 app.use(ErrorHandler);
 

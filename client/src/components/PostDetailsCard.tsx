@@ -166,8 +166,8 @@ const PostDetailsCard = ({
     <View
       className={'p-[15px] h-full'}
       style={{left: isReply ? 20 : 0, width: isReply ? '95%' : '100%'}}>
-      <View className="relative bg-[#F1FFF8] h-full">
-        <View className="flex-row w-full justify-between bg-[#F1FFF8]">
+      <View className="relative bg-[#fff] h-full">
+        <View className="flex-row w-full justify-between bg-[#fff]">
           <View className="flex-row items-center">
             <TouchableOpacity onPress={() => profileHandler(userInfo)}>
               <Image
