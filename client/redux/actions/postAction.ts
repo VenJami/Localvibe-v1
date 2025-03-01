@@ -73,6 +73,33 @@ export const getAllPosts = () => async (dispatch: Dispatch<any>) => {
   }
 };
 
+// get scored Posts
+export const getScoredPosts = () => async (dispatch: Dispatch<any>) => {
+  try {
+    dispatch({
+      type: 'getScoredPostsRequest',
+    });
+
+    const token = await AsyncStorage.getItem('token');
+
+    const {data} = await axios.get(`${URI}/get-scored-posts`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    dispatch({
+      type: 'getScoredPostsSuccess',
+      payload: data.posts,
+    });
+  } catch (error: any) {
+    dispatch({
+      type: 'getScoredPostsFailed',
+      payload: error.response.data.message,
+    });
+  }
+};
+
 interface LikesParams {
   postId?: string | null;
   posts: any;

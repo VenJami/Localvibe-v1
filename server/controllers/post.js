@@ -66,6 +66,24 @@ exports.getAllPosts = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
+// get all posts sorted by score
+exports.getScoredPosts = catchAsyncErrors(async (req, res, next) => {
+  try {
+    // First get all posts
+    const posts = await Post.find();
+
+    // Import the post scoring utility
+    const { sortPostsByScore } = require('../utils/postScoring');
+
+    // Sort posts by score
+    const scoredPosts = sortPostsByScore(posts);
+
+    res.status(200).json({ success: true, posts: scoredPosts });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+});
+
 // add or remove likes
 exports.updateLikes = catchAsyncErrors(async (req, res, next) => {
   try {

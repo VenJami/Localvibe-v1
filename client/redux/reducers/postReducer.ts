@@ -2,6 +2,7 @@ import {createReducer} from '@reduxjs/toolkit';
 
 const intialState = {
   posts:[],
+  scoredPosts: [],
   post:{},
   error: null,
   isSuccess:false,
@@ -29,6 +30,17 @@ export const postReducer = createReducer(intialState, {
    state.posts = action.payload;
   },
   getAllPostsFailed: (state,action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+  },
+  getScoredPostsRequest: state => {
+    state.isLoading = true;
+  },
+  getScoredPostsSuccess: (state,action) => {
+   state.isLoading = false;
+   state.scoredPosts = action.payload;
+  },
+  getScoredPostsFailed: (state,action) => {
     state.isLoading = false;
     state.error = action.payload;
   },
