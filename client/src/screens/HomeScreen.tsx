@@ -26,6 +26,7 @@ import axios from 'axios';
 import {URI} from '../../redux/URI';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const loader = require('../assets/newsfeed/animation_lkbqh8co.json');
 
@@ -81,6 +82,8 @@ const HomeScreen = ({navigation, route}: Props) => {
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // State for welcome modal
   const [loading, setLoading] = useState(false); // State for loading indicator
+
+  const [showScoredPosts, setShowScoredPosts] = useState(false);
 
   // Function to store user ID in AsyncStorage
   const storeUserId = async () => {
@@ -254,6 +257,7 @@ const HomeScreen = ({navigation, route}: Props) => {
       longitude: number;
       accountType: string;
     };
+    _score?: number;
   }
 
   interface User {
@@ -267,6 +271,31 @@ const HomeScreen = ({navigation, route}: Props) => {
       similarityScore: number;
     }>;
   }
+
+  // Calculate post score based on likes, comments, and recency
+  const calculatePostScore = (post: any) => {
+    // Calculate likes score (1 point per like)
+    const likesScore = post.likes.length;
+    
+    // Calculate comments score (3 points per comment/reply)
+    const commentsScore = post.replies.length * 3;
+    
+    // Calculate recency bonus
+    // Posts less than 24 hours old get a bonus that decreases with age
+    const postDate = new Date(post.createdAt);
+    const now = new Date();
+    const postAgeHours = (now - postDate) / (1000 * 60 * 60); // Age in hours
+    
+    // Recency bonus formula: 
+    // - Posts less than 24 hours old get a bonus
+    // - The bonus decreases linearly from 5 to 0 as the post ages from 0 to 24 hours
+    const recencyBonus = postAgeHours <= 24 ? 5 * (1 - postAgeHours / 24) : 0;
+    
+    // Calculate total score
+    const totalScore = likesScore + commentsScore + recencyBonus;
+    
+    return totalScore;
+  };
 
   const filterAndFormatPosts = () => {
     const formattedPosts: Post[] = [];
@@ -295,6 +324,10 @@ const HomeScreen = ({navigation, route}: Props) => {
     console.log('Similar Users Interactions:', similarUsersInteractions);
 
     for (const post of posts) {
+      // Calculate score for each post
+      const score = calculatePostScore(post);
+      const postWithScore = { ...post, _score: score };
+      
       const distance = haversine(
         userData.latitude,
         userData.longitude,
@@ -304,13 +337,20 @@ const HomeScreen = ({navigation, route}: Props) => {
 
       if (distance <= newProximityThreshold) {
         if (post.user.accountType === 'prembusiness') {
-          premiumBusinessPosts.push(post);
+          premiumBusinessPosts.push(postWithScore);
         } else if (post.user.accountType === 'business') {
-          regularBusinessPosts.push(post);
+          regularBusinessPosts.push(postWithScore);
         } else {
-          personalPosts.push(post);
+          personalPosts.push(postWithScore);
         }
       }
+    }
+
+    // If showing scored posts, sort each category by score
+    if (showScoredPosts) {
+      premiumBusinessPosts.sort((a, b) => (b._score || 0) - (a._score || 0));
+      regularBusinessPosts.sort((a, b) => (b._score || 0) - (a._score || 0));
+      personalPosts.sort((a, b) => (b._score || 0) - (a._score || 0));
     }
 
     let premiumIndex = 0;
@@ -435,13 +475,34 @@ const HomeScreen = ({navigation, route}: Props) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 pb-20">
-      <StatusBar
-        animated={true}
-        backgroundColor={'#fff'}
-        barStyle={'dark-content'}
-        showHideTransition={'fade'}
-      />
+    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+      <StatusBar backgroundColor={'#fff'} barStyle={'dark-content'} />
+      
+      {/* Toggle button for scored posts */}
+      <View style={{
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        zIndex: 999,
+      }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: showScoredPosts ? '#FF6B6B' : '#4CAF50',
+            borderRadius: 30,
+            width: 60,
+            height: 60,
+            justifyContent: 'center',
+            alignItems: 'center',
+            elevation: 5,
+          }}
+          onPress={() => setShowScoredPosts(!showScoredPosts)}>
+          <Ionicons 
+            name={showScoredPosts ? "time-outline" : "trending-up"} 
+            size={30} 
+            color="#fff" 
+          />
+        </TouchableOpacity>
+      </View>
 
       <View className="flex flex-row p-2 justify-between bg-white">
         <View>
@@ -451,6 +512,26 @@ const HomeScreen = ({navigation, route}: Props) => {
         </View>
 
         <View className="flex flex-row p-2 justify-between">
+          {/* Display current sorting mode */}
+          <View style={{
+            backgroundColor: '#f0f0f0',
+            borderRadius: 20,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            marginRight: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            <Ionicons 
+              name={showScoredPosts ? "trending-up" : "time-outline"} 
+              size={16} 
+              color="#333" 
+            />
+            <Text style={{ marginLeft: 5, fontSize: 12, color: '#333' }}>
+              {showScoredPosts ? 'Trending' : 'Recent'}
+            </Text>
+          </View>
+          
           <TouchableOpacity
             onPress={() => navigation.navigate('Search')}
             className="rounded-full p-2 mx-2 bg-green-50">

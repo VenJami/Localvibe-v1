@@ -9,6 +9,7 @@ const {
   updateRepliesReplyLike,
   deletePost,
   updateShares,
+  getScoredPosts,
 } = require("../controllers/post");
 
 const { isAuthenticatedUser } = require("../middleware/auth");
@@ -18,6 +19,8 @@ const router = express.Router();
 router.route("/create-post").post(isAuthenticatedUser, createPost);
 
 router.route("/get-all-posts").get(isAuthenticatedUser, getAllPosts);
+
+router.route("/get-scored-posts").get(isAuthenticatedUser, getScoredPosts);
 
 router.route("/update-likes").put(isAuthenticatedUser, updateLikes);
 
