@@ -32,6 +32,19 @@ const SignupScreen = ({navigation, route}: Props) => {
   const [accountType, setAccountType] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const {error, isAuthenticated} = useSelector((state: any) => state.user);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordMatch, setPasswordMatch] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  
+  useEffect(() => {
+    if (password && confirmPassword) {
+      setPasswordMatch(password === confirmPassword);
+    } else {
+      setPasswordMatch(true); // No validation required when both fields are empty
+    }
+  }, [password, confirmPassword]);
 
   useEffect(() => {
     if (route.params) {
@@ -59,30 +72,42 @@ const SignupScreen = ({navigation, route}: Props) => {
     return emailRegex.test(email);
   };
 
-  const validatePassword = (password: string) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    return passwordRegex.test(password);
+  // Regex to check password strength: 8+ characters, special characters
+  const passwordRegex = /^(?=.*[!@#$%^&*])(?=.{8,})/;
+
+  const validatePassword = () => {
+    if (!passwordRegex.test(password)) {
+      setModalMessage('Password must be at least 8 characters long and contain a special character.');
+      setModalVisible(true);
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setModalMessage('Password do not match.');
+      setModalVisible(true);
+      return false;
+    }
+    return true;
   };
 
   const handleSignUpPress = async () => {
     try {
       if (!validateEmail(email)) {
-        Alert.alert('Invalid email format');
+        setModalMessage('Invalid email format.');
+        setModalVisible(true);
         return;
       }
 
-      if (!validatePassword(password)) {
-        Alert.alert('Password must be at least 8 characters long and contain at least 1 letter and 1 number');
+      if (!validatePassword()) {
         return;
       }
 
       await registerUser(name, email, password, avatar, accountType)(dispatch);
-      Alert.alert('Registration Successful!');
-      navigation.navigate('VerifyEmail');
+      setModalMessage('Registration Successful!');
+      setModalVisible(true);
     } catch (error) {
       console.error('An error occurred:', error);
-      Alert.alert('Error', 'An error occurred while processing your request.');
-      navigation.navigate('Signup');
+      setModalMessage('An error occurred while processing your request.');
+      setModalVisible(true);
     }
   };
 
@@ -96,6 +121,7 @@ const SignupScreen = ({navigation, route}: Props) => {
     }
   }, [error, isAuthenticated, navigation]);
 
+  
   return (
     <View style={styles.container}>
       <StatusBar
@@ -128,23 +154,42 @@ const SignupScreen = ({navigation, route}: Props) => {
                 </View>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Password</Text>
-                  <TextInput
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={text => setPassword(text)}
-                    style={styles.input}
-                    secureTextEntry={true}
-                  />
+                  <View style={styles.input}>
+                    <TextInput
+                      style={{width: '85%',}}
+                      placeholder="Password"
+                      value={password}
+                      onChangeText={text => setPassword(text)}
+                      secureTextEntry={!showPassword}
+                    />
+                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                      <Image 
+                      style={styles.eyePassword} 
+                      source={showPassword ? require('../assets/eyeOpen.png') : require('../assets/eyeClose.png')} />
+                   </TouchableOpacity>
+                  </View>
                 </View>
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Confirm Password</Text>
-                  <TextInput
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChangeText={text => setConfirmPassword(text)}
-                    style={styles.input}
-                    secureTextEntry={true}
-                  />
+                  <View style={styles.input}>
+                    <TextInput
+                      style={{ width: '85%', }}
+                      placeholder="Confirm Password"
+                      value={confirmPassword}
+                      onChangeText={text => setConfirmPassword(text)}
+                      secureTextEntry={!showConfirmPassword}
+                    />
+                    
+                    <TouchableOpacity onPress={()=> setShowConfirmPassword(!showConfirmPassword)}>
+                      <Image style={styles.eyePassword} source={showConfirmPassword ? require('../assets/eyeOpen.png') : require('../assets/eyeClose.png')}/>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <View style={{ width: '100%'}}>
+                  <Text style={{ color: passwordMatch === null || passwordMatch ? '#017E5E' : '#f44336', textAlign: 'right' }}>
+                    {password && confirmPassword ? (passwordMatch ? 'Passwords match' : 'Password do not match') : ''}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -289,8 +334,8 @@ const SignupScreen = ({navigation, route}: Props) => {
               </View>
             </View>
           </Modal>
-          <View style={styles.signInSignup}>
-            <TouchableOpacity onPress={handleSignUpPress} disabled={!isChecked}>
+          <View style={{width: '100%', justifyContent: 'center', alignItems: 'center'}}>
+            <TouchableOpacity style={styles.signInSignup} onPress={handleSignUpPress} disabled={!isChecked}>
               <View
                 style={[
                   styles.signUpButton,
@@ -299,7 +344,9 @@ const SignupScreen = ({navigation, route}: Props) => {
                 <Text style={styles.signUpText}>Finish</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('VerifyEmail')}>
+            <TouchableOpacity style={{
+              alignItems: 'center', elevation: 5, shadowColor: '#000', borderColor: '#ccc', borderWidth: 1, borderRadius: 10, width: '80%',
+            }} onPress={() => navigation.goBack()}>
               <View style={styles.signInButton}>
                 <Text style={styles.signInText}>Back</Text>
               </View>
@@ -307,11 +354,59 @@ const SignupScreen = ({navigation, route}: Props) => {
           </View>
         </View>
       </View>
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalWrapper}>
+            <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>WARNING!</Text>
+            <Text style={[styles.modalText, { textAlign: 'center' }]}>{modalMessage}</Text>
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.modalButton,{marginTop: 5,}]}>
+              <Text style={[styles.modalButtonText,{textAlign: 'center',}]}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalWrapper: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#017E5E',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  eyePassword:{
+    height: 20,
+    width: 50,
+    resizeMode: 'contain',
+  },
   termsTriggerText: {
     color: '#017E5E',
     textDecorationLine: 'underline',
@@ -417,8 +512,8 @@ const styles = StyleSheet.create({
   },
   forms: {
     flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
     width: '100%',
   },
@@ -432,7 +527,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-    marginBottom: '15%',
+    marginBottom: '5%',
   },
   gettingStartedText: {
     width: 148,
@@ -452,7 +547,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    marginBottom: 10,
     width: '100%',
   },
   inputContainer: {
@@ -480,16 +574,17 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     paddingHorizontal: 10,
     elevation: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   signInSignup: {
-    marginHorizontal: '8%',
-    flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginBottom: 13,
+    alignItems: 'center',
+    width: '100%',
   },
   signUpButton: {
-    width: 341,
+    width: '80%',
     height: 39,
     backgroundColor: '#017E5E',
     borderRadius: 10,
@@ -503,17 +598,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
   },
   signInButton: {
-    width: 341,
     height: 39,
     backgroundColor: 'white',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    width: '100%',
   },
   signInText: {
     color: '#2f855a',

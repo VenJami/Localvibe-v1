@@ -110,7 +110,7 @@ const MapScreen = ({navigation}: Props) => {
   const [localPins, setLocalPins] = useState([]); // State to hold the pins
 
   // Function to fetch pins from the server
- const fetchPins = async () => {
+  const fetchPins = async () => {
     const token = await AsyncStorage.getItem('token');
     try {
       const response = await fetch(`${URI}/get-all-pins`, {
@@ -120,10 +120,11 @@ const MapScreen = ({navigation}: Props) => {
         },
       });
       const data = await response.json();
-      
+
       // Only update localPins if the data has changed
       if (JSON.stringify(data.pins) !== JSON.stringify(localPins)) {
         setLocalPins(data.pins); // Update local state with fetched pins
+        // Do not reset selectedDays, weekHours, or showTimePicker
       }
     } catch (error) {
       console.error('Error fetching pins:', error); // Log any errors
@@ -138,7 +139,7 @@ const MapScreen = ({navigation}: Props) => {
     const interval = setInterval(() => {
       console.log('Fetching pins from server...'); // Log when fetching starts
       fetchPins();
-    }, 5000); // Adjust the interval as needed
+    }, 1000000); // Adjust the interval as needed
 
     // Clear the interval on component unmount
     return () => {
@@ -523,7 +524,10 @@ const MapScreen = ({navigation}: Props) => {
         contactInfo,
         profileImage,
         operatingHours, // Pass the operatingHours object
-      )(dispatch);
+      )(dispatch).then(() => {
+        // Fetch pins after successful pin creation
+        fetchPins();
+      });
     }
 
     // Reset form states

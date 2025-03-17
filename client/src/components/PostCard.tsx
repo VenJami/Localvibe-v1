@@ -157,9 +157,17 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
       console.log('Reported Item ID:', item._id); // Log the ID of the reported post
       console.log('Report Type: post'); // Log the assumed type
       console.log(selectedReason);
-      const imageUrl = item.image && item.image.url ? item.image.url : 'N/A'; // Assign 'N/A' if image or url is undefined
+      const imageUrl = user.avatar.url || ''; // Use an empty string if no image
       console.log(imageUrl);
       console.log(item.title);
+      console.log('Dispatching report with parameters:', {
+        userId: user._id,
+        postId: item._id,
+        title: item.title,
+        imageUrl: imageUrl,
+        itemType: 'post',
+        reason: selectedReason,
+      });
       // Dispatch the report action
       dispatch(
         createOrUpdateReportAction(

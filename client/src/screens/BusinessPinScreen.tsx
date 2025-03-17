@@ -733,6 +733,10 @@ const BusinessPinScreen = ({route, navigation}: Props) => {
     setIsEditing(true); // Set isEditing to true when opening the modal
   };
 
+  const openModalReport = () =>{
+    setOpenModal(true); // Set isEditing to true when
+  };
+
   // Function to close the modal and set isEditing to false
   const closeModals = () => {
     setIsEditing(false); // Set isEditing to false when closing the modal
@@ -951,7 +955,7 @@ const BusinessPinScreen = ({route, navigation}: Props) => {
                 />
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={openModals}>
+              <TouchableOpacity onPress={openModalReport}>
                 <Image
                   style={styles.editImage}
                   source={require('../assets/report.png')}
@@ -989,7 +993,7 @@ const BusinessPinScreen = ({route, navigation}: Props) => {
                         <TouchableOpacity
                           onPress={handleConfirmReport}
                           style={styles.confirmButton}>
-                          <Text style={styles.saveButton}>Confirm</Text>
+                          <Text style={styles.buttonText}>Confirm</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={handleCancelReport}
@@ -1773,6 +1777,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
 
+  confirmButton1: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+
   modalBackground1: {
     flex: 1,
     justifyContent: 'center',
@@ -1854,6 +1864,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   cancelButton: {
+    backgroundColor: '#f44336',
+    padding: 10,
+    borderRadius: 5,
+  },
+
+  cancelButton1: {
     backgroundColor: '#f44336',
     padding: 10,
     borderRadius: 5,

@@ -25,7 +25,8 @@ const LoginScreen = ({navigation}: Props) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false); // Add this state
+  
   const dispatch = useDispatch();
 
   const submitHandler = () => {
@@ -69,9 +70,9 @@ const LoginScreen = ({navigation}: Props) => {
 
           <View style={styles.loginPass}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email or Phone Number</Text>
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
-                placeholder="Email or Phone Number"
+                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
@@ -80,13 +81,21 @@ const LoginScreen = ({navigation}: Props) => {
 
             <View style={styles.inputContainerPass}>
               <Text style={styles.inputLabel}>Password</Text>
-              <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={styles.input}
-              />
+              <View style={styles.input}>
+                <TextInput
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  style={{width: '80%'}}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Image
+                    style={styles.eyePassword}
+                    source={showPassword ? require('../assets/eyeOpen.png') : require('../assets/eyeClose.png')}
+                  />
+                </TouchableOpacity>
+</View>
             </View>
             <Text 
               onPress={() => handleForgotPassword()}
@@ -117,6 +126,11 @@ const LoginScreen = ({navigation}: Props) => {
 };
 
 const styles = StyleSheet.create({
+  eyePassword: {
+    height: 20,
+    width: 50,
+    resizeMode: 'contain',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F1FFF8',
@@ -205,6 +219,9 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     paddingHorizontal: 10,
     elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   buttonContainer: {
     elevation: 10,

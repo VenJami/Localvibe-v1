@@ -80,6 +80,7 @@ const HomeScreen = ({navigation, route}: Props) => {
   const [previousUserData, setPreviousUserData] = useState(userData); // Track previous user data
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // State for welcome modal
+  const [loading, setLoading] = useState(false); // State for loading indicator
 
   // Function to store user ID in AsyncStorage
   const storeUserId = async () => {
@@ -423,9 +424,14 @@ const HomeScreen = ({navigation, route}: Props) => {
   }, []); // Run only once on component mount
 
   const handleContinue = async () => {
-    setShowWelcomeModal(false); // Close the welcome modal
-    await AsyncStorage.setItem('hasShownWelcomeModal', 'true'); // Mark the modal as shown
-    onRefreshHandler(); // Trigger the refresh handler
+    setLoading(true); // Set loading to true
+    // Add a delay of 5 seconds before executing the following code
+    setTimeout(async () => {
+      setLoading(false); // Set loading to false after the delay
+      setShowWelcomeModal(false); // Close the welcome modal
+      await AsyncStorage.setItem('hasShownWelcomeModal', 'true'); // Mark the modal as shown
+      onRefreshHandler(); // Trigger the refresh handler
+    }, 5000); // 5000 milliseconds = 5 seconds
   };
 
   return (
@@ -540,9 +546,13 @@ const HomeScreen = ({navigation, route}: Props) => {
               LocalVibe connects you with your community by providing personalized news, events, and recommendations based on your location. 
               Explore what's happening around you and stay updated with the latest happenings!
             </Text>
-            <TouchableOpacity style={styles.button1} onPress={handleContinue}>
-              <Text style={styles.buttonText}>Continue</Text>
-            </TouchableOpacity>
+            {loading ? ( // Conditional rendering for loading indicator
+              <Text style={styles.loadingText}>Loading...</Text> // You can replace this with a spinner if desired
+            ) : (
+              <TouchableOpacity style={styles.button1} onPress={handleContinue}>
+                <Text style={styles.buttonText}>Continue</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </Modal>
@@ -621,6 +631,12 @@ const styles = StyleSheet.create({
     borderColor: '#c0c0c0',
     borderWidth: 1,
     backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

@@ -32,6 +32,7 @@ const SignupScreen = ({navigation}: Props) => {
 
 
   const [accountType, setAccountType] = useState('personal');
+  const isDisabled = !firstName || !lastName || !name || !avatar;
 
   const uploadImage = () => {
     ImagePicker.openPicker({
@@ -63,11 +64,6 @@ const SignupScreen = ({navigation}: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
       <View style={styles.container}>
         <Image style={styles.backgroundImage} source={backgroundImage} />
         <View style={styles.logoContainer}>
@@ -144,17 +140,47 @@ const SignupScreen = ({navigation}: Props) => {
               </View>
             </View>
 
-            <TouchableOpacity onPress={submitHandler} style={styles.submitButton}>
-              <Text style={styles.submitButtonText}>Register</Text>
+          <TouchableOpacity
+            onPress={submitHandler}
+            style={[styles.submitButton, isDisabled && styles.disabledButton]}
+            disabled={isDisabled}
+          >
+            <Text style={styles.submitButtonText}>Register</Text>
+          </TouchableOpacity>
+
+          <View style={{width: '100%', marginTop: 10,}}>
+            <TouchableOpacity style={{
+              alignItems: 'center', elevation: 5, shadowColor: '#000', borderColor: '#ccc', borderWidth: 1, borderRadius: 10,
+}} onPress={() => navigation.goBack()}>
+              <View style={styles.signInButton}>
+                <Text style={styles.signInText}>Back</Text>
+              </View>
             </TouchableOpacity>
+          </View>
           </View>
         </View>
       </View>
-    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  signInButton: {
+    height: 39,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  signInText: {
+    color: '#2f855a',
+    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Roboto',
+  },
+  disabledButton: {
+    backgroundColor: '#A0A0A0',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F1FFF8',
@@ -166,9 +192,9 @@ const styles = StyleSheet.create({
     height: 1050,
   },
   contentContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: '15%',
   },
   logoContainer: {
     alignItems: 'center',
@@ -192,7 +218,7 @@ const styles = StyleSheet.create({
     marginVertical: 30,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#000',
     fontWeight: 'bold',
     fontFamily: 'Roboto',

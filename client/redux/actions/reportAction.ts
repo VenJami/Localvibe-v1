@@ -4,25 +4,26 @@ import {Dispatch} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Create or update a report
+
 export const createOrUpdateReportAction =
-  (
-    userId: string,
-    reportedItemId: string,
-    reportTitle: string,
-    reportImage: string,
-    itemType: string,
-    reason: string,
-  ) =>
+(
+  userId: string,
+  reportedItemId: string,
+  reportTitle: string,
+  reportImage: string,
+  itemType: string,
+  reason: string,
+) =>
   async (dispatch: Dispatch<any>) => {
     try {
-      console.log('Dispatching createOrUpdateReportAction...'); // Debugging log
+      console.log('Dispatching createOrUpdateReportAction...');
 
       dispatch({
         type: 'createOrUpdateReportRequest',
       });
 
       const token = await AsyncStorage.getItem('token');
-      console.log('Token fetched:', token); // Debugging log
+      console.log('Token fetched:', token);
 
       console.log('Payload being sent:', {
         userId,
@@ -31,12 +32,11 @@ export const createOrUpdateReportAction =
         reportImage,
         itemType,
         reason,
-      }); // Debugging log
-      console.log('Calling the endpoint:', `${URI}/create-or-update-report`);
+      });
 
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         `${URI}/create-or-update-report`,
-        {userId, reportedItemId, reportTitle, reportImage, itemType, reason},
+        { userId, reportedItemId, reportTitle, reportImage, itemType, reason }, // Change reportImage to imageUrl
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -44,14 +44,14 @@ export const createOrUpdateReportAction =
         },
       );
 
-      console.log('API Response:', data); // Debugging log
+      console.log('API Response:', data);
 
       dispatch({
         type: 'createOrUpdateReportSuccess',
         payload: data,
       });
     } catch (error: any) {
-      console.error('Error in createOrUpdateReportAction:', error.message); // Debugging log
+      console.error('Error in createOrUpdateReportAction:', error.message);
 
       dispatch({
         type: 'createOrUpdateReportFailed',
