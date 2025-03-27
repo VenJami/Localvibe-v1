@@ -226,26 +226,21 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
                 </TouchableOpacity>
               ) : (
                 <>
-                    {(item?.user.accountType === 'prembusiness' ||
-                      item?.user.accountType === 'business') ? (
-                      <TouchableOpacity
-                        style={styles.openMap}
-                        onPress={() =>
-                          navigation.navigate('Map', {
-                            latitude: item.latitude, // Assuming latitude is part of item
-                            longitude: item.longitude, // Assuming longitude is part of item
-                          })
-                        }>
-                        <Text style={styles.userNameText}>Open Map</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity onPress={() => setOpenModal(true)}>
-                        <Image
-                          source={require('../assets/report.png')}
-                          style={styles.report}
-                        />
-                      </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                      style={styles.openMap}
+                      onPress={() =>
+                        navigation.navigate('Map', {
+                          latitude: item.latitude, // Assuming latitude is part of item
+                          longitude: item.longitude, // Assuming longitude is part of item
+                        })
+                      }>
+                      <Text style={styles.userNameText}>Open Map</Text>
+                    </TouchableOpacity>
+
+                    {/* Report Button (Always Visible) */}
+                    <TouchableOpacity onPress={() => setOpenModal(true)}>
+                      <Image source={require('../assets/report.png')} style={styles.report} />
+                    </TouchableOpacity>
                 </>
               )}
             </View>
