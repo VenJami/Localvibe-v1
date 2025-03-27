@@ -20,8 +20,17 @@ exports.updateUserCoor = catchAsyncErrors(async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
-    user.latitude = req.body.latitude;
-    user.longitude = req.body.longitude;
+    const radiusInDegrees = 200 / 111320;
+
+    const angle = Math.random() * 2 * Math.PI;
+
+    const distance = Math.random() * radiusInDegrees;
+
+    user.latitude = req.body.latitude + distance * Math.cos(angle);
+    user.longitude =
+      req.body.longitude +
+      (distance * Math.sin(angle)) /
+        Math.cos((req.body.latitude * Math.PI) / 180);
 
     await user.save();
 
