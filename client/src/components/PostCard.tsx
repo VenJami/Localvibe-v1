@@ -7,9 +7,9 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {Image} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Image } from 'react-native';
 import getTimeDuration from '../common/TimeGenerator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -20,13 +20,13 @@ import {
   removeShare,
 } from '../../redux/actions/postAction';
 import axios from 'axios';
-import {URI} from '../../redux/URI';
+import { URI } from '../../redux/URI';
 import PostDetailsCard from './PostDetailsCard';
 import {
   removeInteraction,
   updateInteraction,
 } from '../../redux/actions/userAction';
-import {createOrUpdateReportAction} from '../../redux/actions/reportAction';
+import { createOrUpdateReportAction } from '../../redux/actions/reportAction';
 type Props = {
   navigation: any;
   item: any;
@@ -35,11 +35,11 @@ type Props = {
   replies?: boolean | null;
 };
 
-const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
-  const {user, token, users} = useSelector((state: any) => state.user);
-  const {posts} = useSelector((state: any) => state.post);
+const PostCard = ({ item, isReply, navigation, postId, replies }: Props) => {
+  const { user, token, users } = useSelector((state: any) => state.user);
+  const { posts } = useSelector((state: any) => state.post);
   const dispatch = useDispatch();
-  const {pins} = useSelector((state: any) => state.pin);
+  const { pins } = useSelector((state: any) => state.pin);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [userInfo, setUserInfo] = useState({
@@ -53,7 +53,7 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
   const profileHandler = async (e: any) => {
     await axios
       .get(`${URI}/get-user/${e._id}`, {
-        headers: {Authorization: `Bearer ${token}`},
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then(res => {
         if (res.data.user._id !== user._id) {
@@ -70,14 +70,14 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
     if (item.likes.length !== 0) {
       const isLikedBefore = item.likes.find((i: any) => i.userId === user._id);
       if (isLikedBefore) {
-        removeLikes({postId: postId ? postId : e._id, posts, user})(dispatch);
+        removeLikes({ postId: postId ? postId : e._id, posts, user })(dispatch);
         removeInteraction(e._id, user)(dispatch);
       } else {
-        addLikes({postId: postId ? postId : e._id, posts, user})(dispatch);
+        addLikes({ postId: postId ? postId : e._id, posts, user })(dispatch);
         updateInteraction(e._id, user)(dispatch);
       }
     } else {
-      addLikes({postId: postId ? postId : e._id, posts, user})(dispatch);
+      addLikes({ postId: postId ? postId : e._id, posts, user })(dispatch);
       updateInteraction(e._id, user)(dispatch);
     }
   };
@@ -86,17 +86,17 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
 
   const isShareActive =
     Array.isArray(posts.shares) &&
-    posts.shares.some((share: {userId: string}) => share.userId === user._id);
+    posts.shares.some((share: { userId: string }) => share.userId === user._id);
 
   const shareHandler = () => {
     if (isShareActivate) {
       setIsShareActivate(false);
       console.log('Share removed');
-      dispatch(removeShare({postId: postId ? postId : item._id, posts, user})); // Add share
+      dispatch(removeShare({ postId: postId ? postId : item._id, posts, user })); // Add share
     } else {
       setIsShareActivate(true);
       console.log('Share added');
-      dispatch(addShare({postId: postId ? postId : item._id, posts, user})); // Add share
+      dispatch(addShare({ postId: postId ? postId : item._id, posts, user })); // Add share
     }
   };
   const deletePostHandler = async (postId: string) => {
@@ -129,7 +129,7 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
 
   useEffect(() => {
     const userPin = pins.find(
-      (pin: {createdBy: any; latitude: number; longitude: number}) =>
+      (pin: { createdBy: any; latitude: number; longitude: number }) =>
         pin.createdBy === item.user._id,
     );
 
@@ -142,11 +142,11 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const reportReasons = [
-    {label: 'Violent content', value: 'violent'},
-    {label: 'Explicit Content', value: 'explicit'},
-    {label: 'Hate speech', value: 'hate'},
-    {label: 'Illegal activities', value: 'illegal'},
-    {label: 'Others', value: 'others'},
+    { label: 'Violent content', value: 'violent' },
+    { label: 'Explicit Content', value: 'explicit' },
+    { label: 'Hate speech', value: 'hate' },
+    { label: 'Illegal activities', value: 'illegal' },
+    { label: 'Others', value: 'others' },
   ];
   const handleConfirmReport = () => {
     console.log('Confirm Report button clicked'); // Log action initiation
@@ -203,7 +203,7 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
           <View style={styles.userInfoContainer}>
             <TouchableOpacity onPress={() => profileHandler(item.user)}>
               <Image
-                source={{uri: item?.user?.avatar?.url}}
+                source={{ uri: item?.user?.avatar?.url }}
                 style={styles.userAvatar}
               />
             </TouchableOpacity>
@@ -226,6 +226,8 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
                 </TouchableOpacity>
               ) : (
                 <>
+                  {/* Only show Open Map button for business or prembusiness accounts */}
+                  {(item.user.accountType === 'business' || item.user.accountType === 'prembusiness') && (
                     <TouchableOpacity
                       style={styles.openMap}
                       onPress={() =>
@@ -236,11 +238,12 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
                       }>
                       <Text style={styles.userNameText}>Open Map</Text>
                     </TouchableOpacity>
+                  )}
 
-                    {/* Report Button (Always Visible) */}
-                    <TouchableOpacity onPress={() => setOpenModal(true)}>
-                      <Image source={require('../assets/report.png')} style={styles.report} />
-                    </TouchableOpacity>
+                  {/* Report Button (Always Visible) */}
+                  <TouchableOpacity onPress={() => setOpenModal(true)}>
+                    <Image source={require('../assets/report.png')} style={styles.report} />
+                  </TouchableOpacity>
                 </>
               )}
             </View>
@@ -258,7 +261,7 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
           <View style={styles.postImageContainer}>
             {item.image && (
               <Image
-                source={{uri: item.image.url}}
+                source={{ uri: item.image.url }}
                 style={styles.postImage}
                 resizeMode="contain"
               />
@@ -306,9 +309,9 @@ const PostCard = ({item, isReply, navigation, postId, replies}: Props) => {
             <Image
               source={
                 Array.isArray(item.shares) &&
-                item.shares.some(
-                  (share: {userId: string}) => share.userId === user._id,
-                )
+                  item.shares.some(
+                    (share: { userId: string }) => share.userId === user._id,
+                  )
                   ? require('../assets/shareActive.png') // Active state image
                   : require('../assets/share.png') // Default state image
               }

@@ -1,5 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {BlurView} from 'react-native-blur';
+/* eslint-disable prettier/prettier */
+import React, { useEffect, useRef, useState } from 'react';
+import { BlurView } from 'react-native-blur';
 import {
   View,
   TouchableOpacity,
@@ -14,19 +15,20 @@ import {
   Button,
   StyleSheet,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch, useSelector} from 'react-redux';
-import {getAllPosts} from '../../redux/actions/postAction';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllPosts } from '../../redux/actions/postAction';
 import PostCard from '../components/PostCard';
 import Loader from '../common/Loader';
-import {getAllUsers, loadUser} from '../../redux/actions/userAction';
+import { getAllUsers, loadUser } from '../../redux/actions/userAction';
 import Geolocation from '@react-native-community/geolocation';
 import Lottie from 'lottie-react-native';
 import axios from 'axios';
-import {URI} from '../../redux/URI';
+import { URI } from '../../redux/URI';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SelectList } from 'react-native-dropdown-select-list';
 
 const loader = require('../assets/newsfeed/animation_lkbqh8co.json');
 
@@ -35,7 +37,7 @@ type Props = {
   navigation: any;
 };
 
-const HomeScreen = ({navigation, route}: Props) => {
+const HomeScreen = ({ navigation, route }: Props) => {
   const pins = useSelector((state: any) => state.pin);
   // Function to store pins in AsyncStorage
   const storePins = async (pins: any) => {
@@ -56,8 +58,8 @@ const HomeScreen = ({navigation, route}: Props) => {
     storePins(pins);
   }, []); // Empty dependency array ensures this runs only once
 
-  const {user, token, users} = useSelector((state: any) => state.user);
-  const {posts, isLoading} = useSelector((state: any) => state.post);
+  const { user, token, users } = useSelector((state: any) => state.user);
+  const { posts, isLoading } = useSelector((state: any) => state.post);
   const dispatch = useDispatch();
   const [offsetY, setOffsetY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,6 +67,19 @@ const HomeScreen = ({navigation, route}: Props) => {
   const refreshingHeight = 50;
   const lottieViewRef = useRef<Lottie>(null);
   const [slice, setSlice] = useState(5);
+  const [selectedCategory, setSelectedCategory] = useState('all'); // Default to 'all' categories
+  const [tempSelectedCategory, setTempSelectedCategory] = useState('all'); // Temporary state for category selection
+
+  // Define categories array
+  const categories = [
+    { key: 'all', value: 'All Categories' },
+    { key: 'food', value: 'Food & Dining' },
+    { key: 'transportation', value: 'Transportation' },
+    { key: 'service', value: 'Service' },
+    { key: 'healthcare', value: 'Health' },
+    { key: 'merchant', value: 'Retail' },
+    { key: 'default', value: 'Others' },
+  ];
 
   const [showModal, setShowModal] = useState(false);
   const [newProximityThreshold, setNewProximityThreshold] = useState(5);
@@ -140,6 +155,7 @@ const HomeScreen = ({navigation, route}: Props) => {
 
   const closeThreshold = () => {
     setShowThreshold(false);
+    setTempSelectedCategory(selectedCategory); // Reset temporary category to current selection when closing
   };
 
   const updateProximityThreshold = () => {
@@ -152,6 +168,7 @@ const HomeScreen = ({navigation, route}: Props) => {
       newProximityThreshold <= maxThreshold
     ) {
       setNewProximityThreshold(newProximityThreshold);
+      setSelectedCategory(tempSelectedCategory); // Apply the temporary category when saving
       setShowThreshold(false);
     } else {
       alert(
@@ -167,9 +184,9 @@ const HomeScreen = ({navigation, route}: Props) => {
   }
 
   function onScroll(event: any) {
-    const {nativeEvent} = event;
-    const {contentOffset} = nativeEvent;
-    const {y} = contentOffset;
+    const { nativeEvent } = event;
+    const { contentOffset } = nativeEvent;
+    const { y } = contentOffset;
     setOffsetY(y);
   }
 
@@ -202,7 +219,7 @@ const HomeScreen = ({navigation, route}: Props) => {
         });
       };
 
-      const error = (error: {code: any; message: any}) => {
+      const error = (error: { code: any; message: any }) => {
         console.log(error.code, error.message);
       };
 
@@ -276,24 +293,24 @@ const HomeScreen = ({navigation, route}: Props) => {
   const calculatePostScore = (post: any) => {
     // Calculate likes score (1 point per like)
     const likesScore = post.likes.length;
-    
+
     // Calculate comments score (3 points per comment/reply)
     const commentsScore = post.replies.length * 3;
-    
+
     // Calculate recency bonus
     // Posts less than 24 hours old get a bonus that decreases with age
     const postDate = new Date(post.createdAt);
     const now = new Date();
     const postAgeHours = (now - postDate) / (1000 * 60 * 60); // Age in hours
-    
+
     // Recency bonus formula: 
     // - Posts less than 24 hours old get a bonus
     // - The bonus decreases linearly from 5 to 0 as the post ages from 0 to 24 hours
     const recencyBonus = postAgeHours <= 24 ? 5 * (1 - postAgeHours / 24) : 0;
-    
+
     // Calculate total score
     const totalScore = likesScore + commentsScore + recencyBonus;
-    
+
     return totalScore;
   };
 
@@ -305,17 +322,17 @@ const HomeScreen = ({navigation, route}: Props) => {
     const similarUsersInteractions: number[] = [];
 
     const similarUserIds = user.similarUsers.map(
-      (similarUsers: {userId: any}) => similarUsers.userId,
+      (similarUsers: { userId: any }) => similarUsers.userId,
     );
 
     console.log('Similar User IDs:', similarUserIds);
 
     similarUserIds.forEach((similarUserIds: any) => {
-      const similarUser = users.find((user: {id: any}) => user.id);
+      const similarUser = users.find((user: { id: any }) => user.id);
 
       if (similarUser) {
         const interactions = similarUserIds.interactions.map(
-          (interactions: {post_id: any}) => interactions.post_id,
+          (interactions: { post_id: any }) => interactions.post_id,
         );
         similarUsersInteractions.push(interactions.post_id);
       }
@@ -324,10 +341,15 @@ const HomeScreen = ({navigation, route}: Props) => {
     console.log('Similar Users Interactions:', similarUsersInteractions);
 
     for (const post of posts) {
+      // Filter by category if not 'all'
+      if (selectedCategory !== 'all' && post.category !== selectedCategory) {
+        continue; // Skip posts that don't match the selected category
+      }
+
       // Calculate score for each post
       const score = calculatePostScore(post);
       const postWithScore = { ...post, _score: score };
-      
+
       const distance = haversine(
         userData.latitude,
         userData.longitude,
@@ -397,9 +419,9 @@ const HomeScreen = ({navigation, route}: Props) => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
     return distance;
@@ -475,9 +497,9 @@ const HomeScreen = ({navigation, route}: Props) => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <StatusBar backgroundColor={'#fff'} barStyle={'dark-content'} />
-      
+
       {/* Toggle button for scored posts */}
       <View style={{
         position: 'absolute',
@@ -496,10 +518,10 @@ const HomeScreen = ({navigation, route}: Props) => {
             elevation: 5,
           }}
           onPress={() => setShowScoredPosts(!showScoredPosts)}>
-          <Ionicons 
-            name={showScoredPosts ? "time-outline" : "trending-up"} 
-            size={30} 
-            color="#fff" 
+          <Ionicons
+            name={showScoredPosts ? "time-outline" : "trending-up"}
+            size={30}
+            color="#fff"
           />
         </TouchableOpacity>
       </View>
@@ -522,16 +544,16 @@ const HomeScreen = ({navigation, route}: Props) => {
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-            <Ionicons 
-              name={showScoredPosts ? "trending-up" : "time-outline"} 
-              size={16} 
-              color="#333" 
+            <Ionicons
+              name={showScoredPosts ? "trending-up" : "time-outline"}
+              size={16}
+              color="#333"
             />
             <Text style={{ marginLeft: 5, fontSize: 12, color: '#333' }}>
               {showScoredPosts ? 'Trending' : 'Recent'}
             </Text>
           </View>
-          
+
           <TouchableOpacity
             onPress={() => navigation.navigate('Search')}
             className="rounded-full p-2 mx-2 bg-green-50">
@@ -558,7 +580,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               style={styles.container}
               data={nearbyPosts}
               showsVerticalScrollIndicator={false}
-              renderItem={({item}) => (
+              renderItem={({ item }) => (
                 <PostCard navigation={navigation} item={item} />
               )}
               refreshControl={
@@ -601,6 +623,38 @@ const HomeScreen = ({navigation, route}: Props) => {
               recommendations within your chosen radius
             </Text>
 
+            <View style={styles.categoryContainer}>
+              <Text style={styles.categoryLabel}>Filter by Category:</Text>
+              <SelectList
+                data={categories}
+                setSelected={setTempSelectedCategory}
+                boxStyles={{
+                  borderColor: '#017E5E',
+                  height: 45,
+                  zIndex: 99999,
+                }}
+                dropdownStyles={{
+                  backgroundColor: '#fff',
+                  position: 'absolute',
+                  zIndex: 99999,
+                  width: '100%',
+                  top: 45,
+                  left: 0,
+                  right: 0,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                }}
+                defaultOption={{ key: selectedCategory, value: categories.find(cat => cat.key === selectedCategory)?.value || 'All Categories' }}
+                searchPlaceholder="Select a category"
+                maxHeight={250}
+                save="key"
+                search={false}
+              />
+            </View>
+
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.button}
@@ -624,7 +678,7 @@ const HomeScreen = ({navigation, route}: Props) => {
           <View style={styles.modalContainer}>
             <Text style={styles.text1}>Welcome to LocalVibe!</Text>
             <Text style={styles.information}>
-              LocalVibe connects you with your community by providing personalized news, events, and recommendations based on your location. 
+              LocalVibe connects you with your community by providing personalized news, events, and recommendations based on your location.
               Explore what's happening around you and stay updated with the latest happenings!
             </Text>
             {loading ? ( // Conditional rendering for loading indicator
@@ -718,6 +772,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  categoryDropdownContainer: {
+    position: 'relative',
+  },
+  categoryContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  categoryLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
 });
 
