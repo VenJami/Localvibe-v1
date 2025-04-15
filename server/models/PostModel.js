@@ -16,6 +16,9 @@ const postSchema = new mongoose.Schema(
     user: {
       type: Object,
     },
+    category: {
+      type: String,
+    },
     likes: [
       {
         name: {

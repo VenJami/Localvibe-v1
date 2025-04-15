@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import axios from 'axios';
 import {URI} from '../URI';
 import {Dispatch} from 'react';
@@ -10,6 +11,7 @@ export const createPostAction =
     image: string,
     user: Object,
     replies: Array<{title: string; image: string; user: any}>,
+    category: string,
   ) =>
   async (dispatch: Dispatch<any>) => {
     try {
@@ -23,11 +25,12 @@ export const createPostAction =
         title,
         image,
         user,
+        category,
       }); // Debugging log
 
       const {data} = await axios.post(
         `${URI}/create-post`,
-        {title, image, user, replies},
+        {title, image, user, replies, category},
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   View,
   Text,
@@ -6,23 +7,43 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch, useSelector} from 'react-redux';
-import {createPostAction} from '../../redux/actions/postAction';
-import {CommonActions} from '@react-navigation/native'; // Import for navigation reset
+import React, { useEffect, useState } from 'react';
+import ImagePicker, { ImageOrVideo } from 'react-native-image-crop-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
+import { createPostAction } from '../../redux/actions/postAction';
+import { CommonActions } from '@react-navigation/native'; // Import for navigation reset
+import { SelectList } from 'react-native-dropdown-select-list'; // Import SelectList
 
 type Props = {
   navigation: any;
 };
 
-const PostScreen = ({navigation}: Props) => {
-  const {user} = useSelector((state: any) => state.user);
-  const {isSuccess, isLoading} = useSelector((state: any) => state.post);
+const PostScreen = ({ navigation }: Props) => {
+  const { user } = useSelector((state: any) => state.user);
+  const { isSuccess, isLoading } = useSelector((state: any) => state.post);
   const dispatch = useDispatch();
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
+  const [category, setCategory] = useState(''); // Add state for category
+
+  // Define categories array
+  const categories = [
+    { key: 'food', value: 'Food & Dining' },
+    { key: 'transportation', value: 'Transportation' },
+    { key: 'service', value: 'Service' },
+    { key: 'healthcare', value: 'Health' },
+    { key: 'merchant', value: 'Retail' },
+    { key: 'default', value: 'Others' },
+  ];
+
+  const [replies, setReplies] = useState([
+    {
+      title: '',
+      image: '',
+      user: '',
+    },
+  ]);
 
   useEffect(() => {
     if (
@@ -35,15 +56,9 @@ const PostScreen = ({navigation}: Props) => {
     setReplies([]);
     setTitle('');
     setImage('');
+    setCategory(''); // Reset category when post is successful
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccess]);
-
-  const [replies, setReplies] = useState([
-    {
-      title: '',
-      image: '',
-      user: '',
-    },
-  ]);
 
   const postImageUpload = () => {
     ImagePicker.openPicker({
@@ -54,14 +69,16 @@ const PostScreen = ({navigation}: Props) => {
       includeBase64: true,
     }).then((image: ImageOrVideo | null) => {
       if (image) {
-        setImage('data:image/jpeg;base64,' + image.data);
+        // Use type assertion to handle the data property
+        const imageData = image as any;
+        setImage('data:image/jpeg;base64,' + imageData.data);
       }
     });
   };
 
   const createPost = () => {
     if (title !== '' || (image !== '' && !isLoading)) {
-      createPostAction(title, image, user, replies)(dispatch);
+      createPostAction(title, image, user, replies, category)(dispatch);
     }
 
     // Add a 1-second delay before navigating to Home and resetting the stack
@@ -70,7 +87,7 @@ const PostScreen = ({navigation}: Props) => {
       navigation.dispatch(
         CommonActions.reset({
           index: 0, // Navigate to the first screen (Home)
-          routes: [{name: 'Home'}],
+          routes: [{ name: 'Home' }],
         }),
       );
       // Alternatively, you could clear/reset relevant states here as needed
@@ -97,7 +114,7 @@ const PostScreen = ({navigation}: Props) => {
 
         <View style={styles.mainContainer}>
           <View style={styles.userInfoContainer}>
-            <Image source={{uri: user?.avatar.url}} style={styles.userAvatar} />
+            <Image source={{ uri: user?.avatar.url }} style={styles.userAvatar} />
             <View style={styles.userInfo}>
               <View style={styles.userNameContainer}>
                 <Text style={styles.userName}>{user?.name}</Text>
@@ -114,18 +131,51 @@ const PostScreen = ({navigation}: Props) => {
             style={styles.textInput}
           />
 
-          <View style={styles.uploadContainer}>
-            <TouchableOpacity
-              style={styles.uploadButton}
-              onPress={postImageUpload}>
-              <Image
-                source={require('../assets/newsfeed/upload.png')}
-                style={styles.uploadIcon}
-              />
-            </TouchableOpacity>
+          <View style={styles.footerButton}>
+            <View style={styles.uploadContainer}>
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={postImageUpload}>
+                <Image
+                  source={require('../assets/newsfeed/upload.png')}
+                  style={styles.uploadIcon}
+                />
+              </TouchableOpacity>
 
-            <View>
-              <Text style={styles.uploadButtonText}>Photo</Text>
+              <View>
+                <Text style={styles.uploadButtonText}>Photo</Text>
+              </View>
+            </View>
+
+            <View style={styles.categoryContainer}>
+              <SelectList
+                data={categories}
+                setSelected={setCategory}
+                boxStyles={{
+                  borderColor: '#017E5E',
+                  height: 45,
+                  zIndex: 99999,
+                }}
+                dropdownStyles={{
+                  backgroundColor: '#fff',
+                  position: 'absolute',
+                  zIndex: 99999,
+                  width: '100%',
+                  top: 45,
+                  left: 0,
+                  right: 0,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                }}
+                defaultOption={{ key: 'default', value: 'Others' }}
+                searchPlaceholder="Select a category"
+                maxHeight={250}
+                save="key"
+                search={false}
+              />
             </View>
           </View>
         </View>
@@ -133,7 +183,7 @@ const PostScreen = ({navigation}: Props) => {
         {image && (
           <View style={styles.imageContainer}>
             <Image
-              source={{uri: image}}
+              source={{ uri: image }}
               style={styles.uploadedImage}
               resizeMethod="auto"
             />
@@ -152,6 +202,18 @@ const PostScreen = ({navigation}: Props) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    zIndex: 0,
+  },
+  footerButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 20,
+    marginVertical: 8,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -216,8 +278,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   uploadButton: {
-    margin: 20,
-    marginVertical: 8,
+    marginRight: 10,
   },
   uploadButtonText: {
     fontSize: 17,
@@ -236,6 +297,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 8,
+    position: 'relative',
+    zIndex: 1,
   },
   postButtonContainer: {
     width: '100%',
@@ -260,13 +323,19 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Ensure border radius is applied
     shadowColor: '#000000',
     shadowOpacity: 0.1,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 10,
     elevation: 3,
+    zIndex: 2,
   },
   uploadContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  categoryContainer: {
+    width: '50%',
+    position: 'relative',
+    zIndex: 9999,
   },
 });
 
