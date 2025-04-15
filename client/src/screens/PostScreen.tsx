@@ -91,7 +91,7 @@ const PostScreen = ({ navigation }: Props) => {
         }),
       );
       // Alternatively, you could clear/reset relevant states here as needed
-    }, 1000); // 1000ms delay = 1 second
+    }, 1500); // 1000ms delay = 1 second
   };
 
   return (
