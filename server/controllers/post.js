@@ -40,6 +40,7 @@ exports.createPost = catchAsyncErrors(async (req, res, next) => {
         : null,
       user: req.body.user,
       replies,
+      category,
     });
 
     await post.save();
@@ -73,7 +74,7 @@ exports.getScoredPosts = catchAsyncErrors(async (req, res, next) => {
     const posts = await Post.find();
 
     // Import the post scoring utility
-    const { sortPostsByScore } = require('../utils/postScoring');
+    const { sortPostsByScore } = require("../utils/postScoring");
 
     // Sort posts by score
     const scoredPosts = sortPostsByScore(posts);
@@ -453,11 +454,11 @@ exports.deletePost = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("Post is not found with this id", 404));
     }
 
-   if(post.image?.public_id){
-    await cloudinary.v2.uploader.destroy(post.image.public_id);
-   }
+    if (post.image?.public_id) {
+      await cloudinary.v2.uploader.destroy(post.image.public_id);
+    }
 
-   await Post.deleteOne({_id: req.params.id});
+    await Post.deleteOne({ _id: req.params.id });
 
     res.status(201).json({
       success: true,
@@ -467,7 +468,6 @@ exports.deletePost = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(error, 400));
   }
 });
-
 
 // add or remove shares
 exports.updateShares = catchAsyncErrors(async (req, res, next) => {
